@@ -1,0 +1,14 @@
+Style/Documentation:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/MethodLength:
+  Exclude:
+    - "db/**/*.rb"
+
+Metrics/AbcSize:
+  Exclude:
+    - "db/**/*.rb"
+    -

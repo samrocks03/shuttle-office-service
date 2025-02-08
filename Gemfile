@@ -1,17 +1,18 @@
-source "https://rubygems.org"
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "3.2.2"
+ruby '3.2.2'
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 7.0.8", ">= 7.0.8.4"
+gem 'rails', '~> 7.0.8', '>= 7.0.8.4'
 
 # Use postgresql as the database for Active Record
-gem "pg", "~> 1.1"
-
+gem 'pg', '~> 1.1'
 
 # Use the Puma web server [https://github.com/puma/puma]
-gem "puma", ">= 5.0"
+gem 'puma', '>= 5.0'
 
 gem 'bcrypt', '~> 3.1', '>= 3.1.12'
 
@@ -21,19 +22,19 @@ gem 'rack-cors'
 
 gem 'active_model_serializers', '~> 0.10.12'
 
-gem 'jsonapi-serializer'
 gem 'cancancan'
+gem 'jsonapi-serializer'
 
-gem "rspec-core"
-gem 'rspec_api_documentation'
-gem 'validates_email_format_of'
 gem 'raddocs'
+gem 'rspec_api_documentation'
+gem 'rspec-core'
+gem 'validates_email_format_of'
 
-gem 'will_paginate', '~> 3.0'
 gem 'prawn', '~> 2.5'
+gem 'will_paginate', '~> 3.0'
 # gem 'raddocs'
-gem 'pagy', '~> 8.0' # omit patch digit
 gem 'bullet', '~> 7.1', '>= 7.1.6'
+gem 'pagy', '~> 8.0' # omit patch digit
 
 # gem 'apitome'
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
@@ -49,12 +50,12 @@ gem 'bullet', '~> 7.1', '>= 7.1.6'
 # gem "bcrypt", "~> 3.1.7"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem "tzinfo-data", platforms: %i[ windows jruby ]
+gem 'tzinfo-data', platforms: %i[windows jruby]
 
 # Reduces boot times through caching; required in config/boot.rb
-gem "bootsnap", require: false
+gem 'bootsnap', require: false
 
-gem "byebug"
+gem 'byebug'
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
 
@@ -63,12 +64,12 @@ gem "byebug"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
-  gem "debug", platforms: %i[ mri windows ]
-  gem 'rspec-rails'
-  gem "shoulda-matchers"
-  gem 'faker'
-  gem 'simplecov'
+  gem 'debug', platforms: %i[mri windows]
   gem 'factory_bot_rails'
+  gem 'faker'
+  gem 'rspec-rails'
+  gem 'shoulda-matchers'
+  gem 'simplecov'
 end
 
 group :development do
