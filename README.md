@@ -99,7 +99,7 @@ Shuttle Office Service is a Ruby on Rails API application that helps companies m
 ### Local Setup
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/shuttle-office-service.git
+   git clone https://github.com/samrocks03/shuttle-office-service.git
    cd shuttle-office-service
    ```
 
