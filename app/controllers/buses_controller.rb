@@ -1,55 +1,36 @@
 # frozen_string_literal: true
 
 class BusesController < ApplicationController
+  include Paginatable
+  include Searchable
+
+  SEARCH_FIELDS = %w[buses.number buses.model companies.name companies.location].freeze
+
+  self.paginatable_options = { default_per_page: 10, max_per_page: 50 }
+
+  skip_before_action :authorized, only: %i[show index]
   before_action :set_bus, only: %i[show update destroy]
 
   load_and_authorize_resource
+
   # GET /buses
   def index
-    @buses = Bus.all
-    # render json: @buses.map(&method(:as_json)), status: :created, location: @bus
-    # render json: @buses.map(&method(:as_json))
-    # render json: @buses.as_json
+    buses = Bus.includes(:company).all
+    buses = apply_search(buses, SEARCH_FIELDS, params[:search])
+    paginated_buses = paginate(buses)
 
-    # Searching based on params
-    if params[:search].present?
-      @buses = @buses.joins(:company).where("
-      buses.number ILIKE ? OR
-      buses.model ILIKE ? OR
-      companies.name ILIKE ?",
-                                            "%#{params[:search]}%", "%#{params[:search]}%", "%#{params[:search]}%")
-
-    end
-
-    # Sorting based on asc/ desc if given
-    if params[:order_by].present? && params[:order_type].present?
-      order_clause = "#{params[:order_by]} #{params[:order_type]}"
-      @buses = @buses.order(order_clause)
-    end
-
-    # Pagination with per_page
-    if params[:per_page].present? && params[:page].present?
-      @pagy, @buses = pagy(@buses, page: params[:page], items: params[:per_page])
-    end
-
-    # render json: @buses.map(&method(:buses_json))
     render json: {
-      data_body: @buses.map(&method(:buses_json)),
-      meta_data: {
-        current_page_number: @pagy&.items || @buses.count,
-        current_page: @pagy&.page || 1,
-        total_count: @pagy&.count || @buses.count
-      }
-    }, status: :ok
-    # render json: @buses.map(&method(:bus_json))
-    # @buses = Bus.all
+      data: ActiveModelSerializers::SerializableResource.new(
+        paginated_buses,
+        each_serializer: BusSerializer
+      ).serializable_hash,
+      meta: pagination_meta
+    }
   end
 
   # GET /buses/1
   def show
-    # render json: @bus
-    render json: @bus.as_json
-    # render json: bus_json(@bus)
+    render json: BusSerializer.new(@bus)
   end
 
   # POST /buses
@@ -57,26 +38,38 @@ class BusesController < ApplicationController
     @bus = Bus.new(bus_params)
 
     if @bus.save
-      render json: @bus.as_json, status: :created, location: @bus
-      # render json: bus_json(@bus), status: :created, location: @bus
+      render json: BusSerializer.new(@bus), status: :created
     else
-      render json: @bus.errors.full_messages, status: :unprocessable_entity
+      render json: {
+        error: {
+          message: 'Bus creation failed',
+          details: @bus.errors.full_messages
+        }
+      }, status: :unprocessable_entity
     end
   end
 
   # PATCH/PUT /buses/1
-  # PATCH/PUT
   def update
     if @bus.update(bus_params)
-      render json: @bus.as_json, status: :ok
+      render json: BusSerializer.new(@bus)
     else
-      render json: @bus.errors.full_messages, status: :unprocessable_entity
+      render json: {
+        error: {
+          message: 'Bus update failed',
+          details: @bus.errors.full_messages
+        }
+      }, status: :unprocessable_entity
     end
   end
 
   def destroy
-    @bus.destroy
-    render json: { message: 'Bus was successfully destroyed' }
+    destroyed_bus_data = BusSerializer.new(@bus).serializable_hash
+
+    render json: {
+      message: 'Bus successfully deleted',
+      data: destroyed_bus_data
+    }, status: :ok
   end
 
   private
@@ -89,16 +82,5 @@ class BusesController < ApplicationController
   # Only allow a list of trusted parameters through.
   def bus_params
     params.require(:bus).permit(:number, :capacity, :model, :company_id)
-  end
-
-  # Custom method to render bus JSON
-  def buses_json(bus)
-    {
-      id: bus.id,
-      number: bus.number,
-      capacity: bus.capacity,
-      model: bus.model,
-      company: bus.company.name
-    }
   end
 end

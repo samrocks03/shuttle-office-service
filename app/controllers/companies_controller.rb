@@ -1,46 +1,31 @@
 # frozen_string_literal: true
 
 class CompaniesController < ApplicationController
+  include Paginatable
+  include Searchable
+
+  SEARCH_FIELDS = %w[companies.name companies.location].freeze
+
+  self.paginatable_options = { default_per_page: 10, max_per_page: 50 }
+
   skip_before_action :authorized, only: %i[show index]
   before_action :set_company, only: %i[show update destroy]
 
   load_and_authorize_resource
+
   # GET /companies
   def index
-    @companies = Company.all
+    companies = Company.all
+    companies = apply_search(companies, SEARCH_FIELDS, params[:search])
+    paginated_companies = paginate(companies)
 
-    if params[:search].present?
-      @companies = @companies.where("
-          companies.name ILIKE ? OR
-          companies.location ILIKE ?
-        ",
-                                    "%#{params[:search]}%", "%#{params[:search]}%")
-    end
-
-    if params[:order_by].present? && params[:order_type].present?
-      order_clause = "#{params[:order_by]} #{params[:order_type]}"
-      @companies = @companies.order(order_clause)
-    end
-
-    # Pagination with per_page
-    if params[:per_page].present? && params[:page].present?
-      @pagy, @companies = pagy(@companies, page: params[:page], items: params[:per_page])
-    end
-
-    # @companies = Company.all.where("users.name ILIKE ?", params[:search])
-    # debugger
-    # @companies = Company.all.order("#{params[:order_by]} #{params[:order_type]}")
-    # @pagy, @companies = pagy(@companies,page: params[:page],items: params[:per_page])
-
-    # @companies = Company.all
     render json: {
-      respBody: @companies.map(&method(:companies_json)),
-      metaData: {
-        current_page_number: @pagy&.items || @companies.count,
-        current_page: @pagy&.page || 1,
-        total_count: @pagy&.count || @companies.count
-      }
-    }, status: :ok
+      data: ActiveModelSerializers::SerializableResource.new(
+        paginated_companies,
+        each_serializer: CompanySerializer
+      ).serializable_hash,
+      meta: pagination_meta
+    }
   end
 
   # GET /companies/1
