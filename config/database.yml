@@ -2,16 +2,21 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: postgres
-  password: root
+  host: <%= ENV["DATABASE_HOST"] || "localhost" %>
+  username: <%= ENV["DATABASE_USERNAME"] %>
+  password: <%= ENV["DATABASE_PASSWORD"] %>
+
 
 development:
   <<: *default
+  # database: <%= ENV["DEVELOPMENT_DB"] %>
   database: officebusbooking_development
+  host: db
 
 test:
   <<: *default
   database: officebusbooking_test
+  host: db
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
@@ -35,6 +40,7 @@ test:
 #
 production:
   <<: *default
-  database: officebusbooking_production
-  username: officebusbooking
-  password: <%= ENV["OFFICEBUSBOOKING_DATABASE_PASSWORD"] %>
+  database: <%= ENV["PRODUCTION_DB"] %>
+  username: <%= ENV["PRODUCTION_USERNAME"] %>
+  password: <%= ENV["DEFAULT_PASSWORD"] %>
+  host: db
