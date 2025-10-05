@@ -14,7 +14,16 @@ module Officebusbooking
     config.load_defaults 7.0
 
     # Configuration for the application, engines, and railties goes here.
-    #
+
+    # Enable caching in development
+    config.action_controller.perform_caching = true
+
+    # Highlight code that triggered database queries in logs
+    config.active_record.verbose_query_logs = true
+
+    # Optimize autoloading
+    config.enable_reloading = true
+    config.eager_load = false
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class User < ApplicationRecord
-  has_secure_password
   # bcrypt method that encrypts pw for each user
+  has_secure_password
 
   belongs_to :role
   belongs_to :company
@@ -20,11 +20,15 @@ class User < ApplicationRecord
   before_validation :normalize_fields
 
   def admin?
-    role.name == 'admin'
+    role&.admin?
   end
 
   def employee?
-    role.name == 'user'
+    role&.user?
+  end
+
+  def guest?
+    role&.guest?
   end
 
   private

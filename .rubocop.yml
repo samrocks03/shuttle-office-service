@@ -12,3 +12,10 @@ Metrics/AbcSize:
   Exclude:
     - "db/**/*.rb"
     -
+
+
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false

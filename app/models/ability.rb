@@ -6,10 +6,6 @@ class Ability
   def initialize(user)
     user ||= User.new
 
-    # role.name == "admin"
-    # admin = role.find_by(name: "admin")
-
-    # byebug
     if user.admin? # This will contain admin role
       can :manage, :all
     elsif user.employee? # User role
@@ -24,7 +20,16 @@ class Ability
       can :read, Company
       can :read, Schedule # user can read schedule
       can %i[create read], Reservation, user_id: user.id # can view only his reservation
-      cannot %i[update destroy], Reservation # User cannot update or delete reservations
+      cannot %i[update delete], Reservation # User cannot update or delete reservations
+
+    elsif user.guest?
+      can %i[create], User, id: user.id
+      can %i[create], Reservation, user_id: user.id
+      cannot %i[update delete update], User
+      cannot %i[update delete update], Reservation
+      cannot %i[create delete update], Schedule
+      cannot %i[create delete update], Bus
+      cannot %i[create delete update], Company
     else
       # Default guest abilities
       cannot :manage, :all
