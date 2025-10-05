@@ -1,4 +1,7 @@
+# Defines a build-time variable with default value 3.2.2
 ARG RUBY_VERSION=3.2.2
+
+# Creates the base image using Ruby 3.2.2 slim container
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 # Set working directory
@@ -15,10 +18,10 @@ ENV RAILS_ENV="development" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle"
 
-# Stage to build gems and precompile assets
+# Creates everything needed to build app
 FROM base as build
 
-# Install packages needed to build gems
+# Install build dependecies
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential curl git pkg-config libyaml-dev && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
@@ -42,7 +45,7 @@ RUN chmod +x /usr/bin/entrypoint.sh
 # Final stage for app image
 FROM base
 
-# Copy built artifacts: gems, application
+# Copy built artifacts: gems, application, entrypoint
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
 COPY --from=build /usr/bin/entrypoint.sh /usr/bin/entrypoint.sh
@@ -54,10 +57,10 @@ RUN groupadd --system --gid 1000 rails && \
     mkdir -p /rails/tmp/pids && \
     chown -R rails:rails /rails
 
+# Switch to non-root user
 USER 1000:1000
 
-# Entrypoint prepares the database.
-
+# Sets the entrypoint script that runs first
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 
 # Start the application server

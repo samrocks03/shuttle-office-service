@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
+# Shebang and error handling - script exists on error.
 
-# Create master.key file from environment variable if it doesn't exist
+# Create master.key and link to RAILS_MASTER_KEY in .env file
 if [ -n "${RAILS_MASTER_KEY}" ] && [ ! -f /rails/config/master.key ]; then
     echo "Creating master.key from environment variable..."
     echo "${RAILS_MASTER_KEY}" > /rails/config/master.key
