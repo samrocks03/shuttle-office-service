@@ -211,6 +211,7 @@ GEM
     rake (13.2.1)
     rdoc (6.7.0)
       psych (>= 4.0.0)
+    redis (4.8.1)
     reline (0.5.10)
       io-console (~> 0.5)
     rspec (3.13.0)
@@ -299,6 +300,7 @@ DEPENDENCIES
   rack-cors
   raddocs
   rails (~> 7.0.8, >= 7.0.8.4)
+  redis (>= 4.0.1)
   rspec-core
   rspec-rails
   rspec_api_documentation

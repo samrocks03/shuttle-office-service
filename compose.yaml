@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgres:16
+    container_name: shuttle_postgres_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    ports:
+      - 5434:5432
+
+  web:
+    build: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0"
+    volumes:
+      - .:/myapp
+      - bundle:/bundle
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_HOST: db
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      TEST_DB: ${TEST_DB}
+      RAILS_ENV: development
+      REDIS_URL: redis://redis:6379/0
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      REDIS_PORT: 6379
+
+  sidekiq:
+    build: .
+    command: bundle exec sidekiq
+    volumes:
+      - .:/myapp
+    environment:
+      DATABASE_HOST: db
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      RAILS_ENV: development
+      REDIS_URL: redis://redis:6379/0
+      REDIS_PORT: 6379
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    image: redis:latest
+    command: redis-server
+    volumes:
+      - redis:/data
+    ports:
+      - 6379
+    logging:
+      driver: none
+
+volumes:
+  db_data:
+  bundle:
+  redis:
+
