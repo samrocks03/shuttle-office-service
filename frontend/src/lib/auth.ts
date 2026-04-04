@@ -27,21 +27,22 @@ function isTokenExpired(token: string): boolean {
 
 /**
  * Role constants matching Rails role_type enum.
+ * Rails: { admin: 0, user: 1, guest: 2 } — JWT contains the string key.
  */
 const ROLES = {
-  EMPLOYEE: 0,
-  ADMIN: 1,
-  SUPER_ADMIN: 2,
+  ADMIN: "admin",
+  USER: "user",
+  GUEST: "guest",
 } as const;
 
 /**
- * Map role_type to dashboard path prefix.
+ * Map role_type string to dashboard path prefix.
  */
-function getDashboardPath(roleType: number): string {
+function getDashboardPath(roleType: string): string {
   switch (roleType) {
     case ROLES.ADMIN:
       return "/admin";
-    case ROLES.SUPER_ADMIN:
+    case ROLES.GUEST:
       return "/super-admin";
     default:
       return "/employee";

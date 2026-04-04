@@ -46,6 +46,18 @@ interface IRegisterResponse {
   message: string;
 }
 
+interface ICompanyResource {
+  id: string;
+  type: "company";
+  attributes: {
+    uid: string;
+    name: string;
+    location: string;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
 interface ICompanyOption {
   id: number;
   uid: string;

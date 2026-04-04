@@ -28,7 +28,7 @@ interface IUser {
   phone_number: string;
   company_id: number;
   role_id: number;
-  role_type: number;
+  role_type: string;
   company: {
     id: number;
     uid: string;
@@ -39,7 +39,7 @@ interface IUser {
 interface ITokenPayload {
   user_id: number;
   user_uid: string;
-  role_type: number;
+  role_type: string;
   company_id: number;
   exp?: number;
 }

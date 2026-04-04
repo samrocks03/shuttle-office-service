@@ -1,14 +1,23 @@
 import type { Metadata } from "next";
-import { Inter, Geist } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import { Providers } from "@/providers/Providers";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
+/**
+ * Inter — headlines, body copy (Stitch: font-headline + font-body)
+ * Space Grotesk — all label/data text: nav items, seat IDs, times,
+ *                 route codes, stats (Stitch: font-label)
+ */
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -28,7 +37,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("h-full", "antialiased", inter.variable, "font-sans", geist.variable)}>
+    <html
+      lang="en"
+      className={cn("h-full antialiased", inter.variable, spaceGrotesk.variable)}
+    >
       <body className="min-h-full flex flex-col font-sans">
         <Providers>{children}</Providers>
       </body>

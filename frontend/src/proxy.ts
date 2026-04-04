@@ -18,13 +18,13 @@ function isDashboardRoute(pathname: string): boolean {
   );
 }
 
-function roleMatchesPath(roleType: number, pathname: string): boolean {
+function roleMatchesPath(roleType: string, pathname: string): boolean {
   switch (roleType) {
-    case ROLES.EMPLOYEE:
+    case ROLES.USER:
       return pathname.startsWith("/employee");
     case ROLES.ADMIN:
       return pathname.startsWith("/admin");
-    case ROLES.SUPER_ADMIN:
+    case ROLES.GUEST:
       return pathname.startsWith("/super-admin");
     default:
       return false;

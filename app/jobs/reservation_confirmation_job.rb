@@ -8,8 +8,8 @@ class ReservationConfirmationJob < ApplicationJob
 
   def perform(reservation_id)
     reservation = Reservation
-      .includes(user: :company, schedule: { bus: :company })
-      .find(reservation_id)
+                  .includes(user: :company, schedule: { bus: :company })
+                  .find(reservation_id)
 
     return if reservation.user.email.blank?
 

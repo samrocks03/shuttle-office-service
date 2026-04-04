@@ -8,14 +8,14 @@ import { MobileNav } from "./MobileNav";
 interface IAppShellProps {
   children: React.ReactNode;
   userName: string;
-  roleType: number;
+  roleType: string;
 }
 
 export function AppShell({ children, userName, roleType }: IAppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-secondary">
+    <div className="flex h-screen bg-surface">
       <Sidebar roleType={roleType} collapsed={sidebarCollapsed} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header

@@ -12,9 +12,10 @@ interface IMobileNavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const MOBILE_ITEMS: Record<number, IMobileNavItem[]> = {
-  [ROLES.EMPLOYEE]: [
+const MOBILE_ITEMS: Record<string, IMobileNavItem[]> = {
+  [ROLES.USER]: [
     { label: "Home", href: "/employee", icon: Home },
+    { label: "Schedules", href: "/employee/schedules", icon: CalendarDays },
     { label: "Rides", href: "/employee/reservations", icon: Ticket },
     { label: "Profile", href: "/employee/profile", icon: User },
   ],
@@ -23,7 +24,7 @@ const MOBILE_ITEMS: Record<number, IMobileNavItem[]> = {
     { label: "Buses", href: "/admin/buses", icon: Bus },
     { label: "Schedules", href: "/admin/schedules", icon: CalendarDays },
   ],
-  [ROLES.SUPER_ADMIN]: [
+  [ROLES.GUEST]: [
     { label: "Home", href: "/super-admin", icon: Home },
     { label: "Companies", href: "/super-admin/companies", icon: Building2 },
     { label: "Users", href: "/super-admin/users", icon: User },
@@ -31,12 +32,12 @@ const MOBILE_ITEMS: Record<number, IMobileNavItem[]> = {
 };
 
 interface IMobileNavProps {
-  roleType: number;
+  roleType: string;
 }
 
 export function MobileNav({ roleType }: IMobileNavProps) {
   const pathname = usePathname();
-  const items = MOBILE_ITEMS[roleType] ?? MOBILE_ITEMS[ROLES.EMPLOYEE];
+  const items = MOBILE_ITEMS[roleType] ?? MOBILE_ITEMS[ROLES.USER];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden border-t bg-white">

@@ -1,9 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 export const authKeys = {
   user: ["user", "profile"] as const,
   companies: ["companies", "list"] as const,
+  companiesSearch: (search: string) => ["companies", "search", search] as const,
 };
 
 export function useLoginMutation() {
@@ -11,7 +12,7 @@ export function useLoginMutation() {
 
   return useMutation({
     mutationFn: (data: ILoginRequest) =>
-      apiClient.post<ILoginResponse>("/api/v1/login", data),
+      apiClient.post<ILoginResponse>("/api/auth/login", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: authKeys.user });
     },
@@ -29,19 +30,22 @@ export function useLogoutMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => apiClient.delete("/api/v1/logout"),
+    mutationFn: () => apiClient.delete("/api/auth/logout"),
     onSuccess: () => {
       queryClient.clear();
-      window.location.href = "/login";
+      window.location.replace("/login");
     },
   });
 }
 
-export function useCompanies() {
+export function useCompaniesSearch(search: string) {
   return useQuery({
-    queryKey: authKeys.companies,
+    queryKey: authKeys.companiesSearch(search),
     queryFn: () =>
-      apiClient.get<IApiResponse<ICompanyOption[]>>("/api/v1/companies"),
-    staleTime: 5 * 60 * 1000,
+      apiClient.get<IApiResponse<ICompanyResource[]>>("/api/v1/companies", {
+        params: { search: search || undefined, per_page: 10 },
+      }),
+    staleTime: 2 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 }
