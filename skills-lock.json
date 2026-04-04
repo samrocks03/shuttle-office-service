@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "dhh-rails-style": {
+      "source": "everyinc/compound-engineering-plugin",
+      "sourceType": "github",
+      "computedHash": "1af67d17c3248756a7f525510b1d1ce4ebb62340e0643fa6b6310b7aaca433df"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
@@ -25,6 +30,16 @@
       "source": "wshobson/agents",
       "sourceType": "github",
       "computedHash": "dcace78e5cef7d8dce8ffef7ebee146e6c83a438aa4cf80bf502730e870c02d4"
+    },
+    "rails-expert": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "computedHash": "5f5f0a31ac77498c9046c182aed67d74c4084cf147d55bf78f7bdc403efd2a61"
+    },
+    "ruby-expert": {
+      "source": "personamanagmentlayer/pcl",
+      "sourceType": "github",
+      "computedHash": "b50a22a260d2321c1eef8440f967a23df461b576a5c97a8aa2dd43092a85b1d6"
     },
     "skill-creator": {
       "source": "anthropics/skills",
