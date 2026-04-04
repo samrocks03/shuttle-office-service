@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Pdf
+  Prawn::Fonts::AFM.hide_m17n_warning = true
+
   class BaseGenerator
     BRAND_COLOR  = '4F46E5'
     ACCENT_COLOR = '818CF8'
