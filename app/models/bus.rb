@@ -1,17 +1,15 @@
 # frozen_string_literal: true
 
 class Bus < ApplicationRecord
-  has_many :schedules, dependent: :destroy
-  belongs_to :company
+  include UidGenerator
+
+  belongs_to :company, inverse_of: :buses
+  has_many :schedules, dependent: :destroy, inverse_of: :bus
 
   validates :number, :capacity, :model, presence: true
   validates :number, uniqueness: true
 
   before_validation :normalize_model
-
-  def as_json(options: {})
-    super(only: %i[id number capacity model company_id])
-  end
 
   private
 

@@ -9,14 +9,15 @@ default: &default
 
 development:
   <<: *default
-  # database: <%= ENV["DEVELOPMENT_DB"] %>
   database: officebusbooking_development
-  host: db
+  host: <%= ENV["DATABASE_HOST"] || "" %>
+  username: <%= ENV["DATABASE_USERNAME"] || "postgres" %>
 
 test:
   <<: *default
   database: officebusbooking_test
-  host: db
+  host: <%= ENV["DATABASE_HOST"] || "" %>
+  username: <%= ENV["DATABASE_USERNAME"] || "postgres" %>
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is

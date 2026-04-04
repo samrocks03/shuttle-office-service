@@ -1,20 +1,17 @@
 # frozen_string_literal: true
 
 class User < ApplicationRecord
-  # bcrypt method that encrypts pw for each user
+  include UidGenerator
+
   has_secure_password
 
-  belongs_to :role
-  belongs_to :company
-  has_many :reservations, dependent: :destroy
+  belongs_to :role, inverse_of: :users
+  belongs_to :company, inverse_of: :users
+  has_many :reservations, dependent: :destroy, inverse_of: :user
 
   validates :first_name, :last_name, :phone_number, presence: true
   validates :phone_number, numericality: true, format: { with: /\A\d{10}\z/, message: 'must be 10 digits' }
   validates :email, uniqueness: true, email_format: { message: 'is not looking good' }
-
-  # validates :email, :URI::MAILTO:email
-  # validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, uniqueness: true
-
   validates :phone_number, uniqueness: true
 
   before_validation :normalize_fields

@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 class Schedule < ApplicationRecord
-  belongs_to :bus
-  has_many :reservations, dependent: :destroy
+  include UidGenerator
+
+  belongs_to :bus, inverse_of: :schedules
+  has_many :reservations, dependent: :destroy, inverse_of: :schedule
 
   validates :start_point, :arrival_time, :departure_time, presence: true
 
@@ -11,12 +13,19 @@ class Schedule < ApplicationRecord
 
   after_initialize :set_default_available_seats
 
-  def decrement_available_seat
-    update(available_seats: available_seats - 1)
+  def decrement_available_seat!
+    rows = self.class.where(id: id).where('available_seats > 0')
+                .update_all('available_seats = available_seats - 1')
+    reload
+    rows.positive?
   end
 
-  def increment_available_seat
-    update(available_seats: available_seats + 1)
+  def increment_available_seat!
+    rows = self.class.joins(:bus).where(id: id)
+                .where('schedules.available_seats < buses.capacity')
+                .update_all('available_seats = available_seats + 1')
+    reload
+    rows.positive?
   end
 
   private
@@ -32,7 +41,7 @@ class Schedule < ApplicationRecord
   end
 
   def unique_schedule_within_duration
-    existing_schedules = Schedule.where(bus_id:, date:)
+    existing_schedules = Schedule.where(bus_id: bus_id, date: date)
     overlapping_schedules = existing_schedules.select do |existing_schedule|
       (existing_schedule.departure_time..existing_schedule.arrival_time).cover?(departure_time) ||
         (departure_time..arrival_time).cover?(existing_schedule.departure_time)
