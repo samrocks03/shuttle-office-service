@@ -9,14 +9,16 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
     ports:
-      - 5434:5432
+      - 5433:5432
 
   web:
     build: .
-    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0"
+    command: bash -c "rm -f tmp/pids/server.pid 2>/dev/null; bundle exec rails server -b 0.0.0.0"
     volumes:
-      - .:/myapp
+      - .:/rails
       - bundle:/bundle
+      - rails_log:/rails/log
+      - rails_tmp:/rails/tmp
     ports:
       - 3000:3000
     depends_on:
@@ -35,9 +37,12 @@ services:
 
   sidekiq:
     build: .
-    command: bundle exec sidekiq
+    command: bundle exec sidekiq -C config/sidekiq.yml
     volumes:
-      - .:/myapp
+      - .:/rails
+      - bundle:/bundle
+      - rails_log:/rails/log
+      - rails_tmp:/rails/tmp
     environment:
       DATABASE_HOST: db
       DATABASE_USERNAME: ${DATABASE_USERNAME}
@@ -46,6 +51,7 @@ services:
       RAILS_ENV: development
       REDIS_URL: redis://redis:6379/0
       REDIS_PORT: 6379
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
     depends_on:
       - db
       - redis
@@ -65,29 +71,22 @@ services:
       context: ./frontend
       target: dev
     container_name: shuttle_frontend
+    ports:
+      - "3001:3001"
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost
-      - INTERNAL_API_URL=http://web:3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      INTERNAL_API_URL: ${INTERNAL_API_URL}
     depends_on:
       - web
-
-  nginx:
-    image: nginx:alpine
-    container_name: shuttle_nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - web
-      - frontend
 
 volumes:
   db_data:
   bundle:
   redis:
+  rails_log:
+  rails_tmp:
 

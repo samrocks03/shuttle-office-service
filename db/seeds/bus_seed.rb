@@ -53,12 +53,10 @@ Company.all.each do |company|
   puts "Creating buses for #{company.name}..."
 
   rand(6..8).times do |i|
-    bus = Bus.find_or_create_by!(
-      number: "#{company.name[0..3].upcase}#{100 + i}",
-      capacity: [25, 30, 35, 40, 45, 50, 55].sample,
-      model: bus_models.sample,
-      company: company
-    )
+    bus = Bus.find_or_create_by!(number: "#{company.name[0..3].upcase}#{100 + i}", company: company) do |b|
+      b.capacity = [25, 30, 35, 40, 45, 50, 55].sample
+      b.model = bus_models.sample
+    end
 
     total_buses_created += 1
     puts "--- Created bus #{bus.number} for #{company.name} (capacity: #{bus.capacity})"

@@ -39,7 +39,7 @@ module Pdf
         @document.text_box format_time(@schedule.departure_time),
           at: [0, y], width: 100, style: :bold
         @document.fill_color MUTED_COLOR
-        @document.text_box "\u2192",
+        @document.text_box ">>",
           at: [110, y], width: 30, align: :center
         @document.fill_color TEXT_COLOR
         @document.text_box format_time(@schedule.arrival_time),
@@ -55,7 +55,7 @@ module Pdf
         @document.text_box @schedule.start_point,
           at: [0, y], width: 200
         @document.fill_color MUTED_COLOR
-        @document.text_box "\u2192",
+        @document.text_box ">>",
           at: [200, y], width: 20, align: :center
         @document.fill_color TEXT_COLOR
         @document.text_box @company.name,

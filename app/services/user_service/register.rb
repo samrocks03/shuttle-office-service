@@ -23,11 +23,11 @@ module UserService
       @user = User.new(
         first_name: params[:first_name],
         last_name: params[:last_name],
-        phone_number: params[:phone_number],
+        phone_number: params[:phone_number]&.gsub(/\D/, ''),
         email: params[:email],
         password: params[:password],
         company_id: params[:company_id],
-        role_id: params[:role_id]
+        role_id: params[:role_id] || Role.user_role&.id
       )
       return true if user.save
 

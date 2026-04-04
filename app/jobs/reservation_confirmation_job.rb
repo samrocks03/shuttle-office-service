@@ -3,12 +3,12 @@
 class ReservationConfirmationJob < ApplicationJob
   queue_as :mailers
 
-  retry_on StandardError, wait: :polynomially_longer, attempts: 3
+  retry_on StandardError, wait: :exponentially_longer, attempts: 3
   discard_on ActiveRecord::RecordNotFound
 
   def perform(reservation_id)
     reservation = Reservation
-      .includes(:user, schedule: { bus: :company })
+      .includes(user: :company, schedule: { bus: :company })
       .find(reservation_id)
 
     return if reservation.user.email.blank?

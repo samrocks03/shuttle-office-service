@@ -23,7 +23,9 @@ module ScheduleService
         search: @params[:search],
         sort_by: @params[:sort_by],
         sort_order: @params[:sort_order],
-        bus_id: @params[:bus_id]
+        bus_id: @params[:bus_id],
+        start_point: @params[:start_point],
+        date: @params[:date]
       )
       result = paginate(scope, page: @params[:page], per_page: @params[:per_page])
       @schedules = result[:records]

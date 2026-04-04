@@ -9,7 +9,7 @@ module Api
         result = UserService::Login.new(login_params).call
 
         if result.success
-          token = result.data.dig(:data, :token)
+          token = result.data[:token]
           cookies[:token] = {
             value: token,
             httponly: true,

@@ -2,10 +2,14 @@
 
 puts 'Creating shuttle bus schedules...'
 
-# Check if we have buses first
 if Bus.count.zero?
   puts 'XXX No buses found! Please run bus_seed.rb first.'
-  exit
+  return
+end
+
+if Schedule.count > 0
+  puts "Schedules already exist (#{Schedule.count} records), skipping."
+  return
 end
 
 # Pune IT Park locations and residential areas

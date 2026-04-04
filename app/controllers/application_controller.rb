@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::API
+  include ActionController::Cookies
+
   before_action :authenticate
 
   rescue_from CanCan::AccessDenied do |exception|
@@ -42,12 +44,20 @@ class ApplicationController < ActionController::API
   end
 
   def decoded_token
-    header = request.headers['Authorization']
-    return unless header
+    token = token_from_header || token_from_cookie
+    return unless token
 
-    token = header.split(' ').last
     JWT.decode(token, Rails.application.credentials[:secret_key_base])
   rescue JWT::DecodeError
     nil
+  end
+
+  def token_from_header
+    header = request.headers['Authorization']
+    header&.split(' ')&.last
+  end
+
+  def token_from_cookie
+    cookies[:token]
   end
 end

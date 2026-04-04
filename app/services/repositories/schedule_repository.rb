@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 class ScheduleRepository
-  def self.index(search: nil, sort_by: 'date', sort_order: 'desc', bus_id: nil)
+  def self.index(search: nil, sort_by: 'date', sort_order: 'desc', bus_id: nil, start_point: nil, date: nil)
     scope = Schedule.includes(bus: :company)
 
     scope = scope.where(bus_id: bus_id) if bus_id.present?
+    scope = scope.where('schedules.start_point ILIKE ?', "%#{start_point}%") if start_point.present?
+    scope = scope.where(date: date) if date.present?
     if search.present?
       scope = scope.joins(bus: :company)
                    .where(

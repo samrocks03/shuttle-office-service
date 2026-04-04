@@ -14,16 +14,17 @@ rm -f ./tmp/pids/server.pid
 
 # Wait for database to be ready
 echo "Waiting for database to be ready..."
-until nc -z db 5432; do
+until ruby -e "require 'socket'; TCPSocket.new('${DATABASE_HOST}', 5432).close" 2>/dev/null; do
   echo "Database not ready - sleeping"
   sleep 2
 done
 
 # Make sure db is ready to go
-echo "Setting up database..."
-bundle exec rails db:create
-bundle exec rails db:migrate
-bundle exec rails db:seed
+if [[ "$*" != *"sidekiq"* ]]; then
+  echo "Setting up database..."
+  bundle exec rails db:prepare
+  bundle exec rails db:seed
+fi
 
 # Then exec the container's main process (CMD in the Dockerfile).
 echo "Starting Rails server..."
