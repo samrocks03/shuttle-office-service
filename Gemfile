@@ -67,7 +67,11 @@ group :development, :test do
   gem 'debug', platforms: %i[mri windows]
   gem 'factory_bot_rails'
   gem 'faker'
+  gem 'database_cleaner-active_record'
   gem 'rspec-rails'
+  gem 'rswag-api'
+  gem 'rswag-specs'
+  gem 'rswag-ui'
   gem 'shoulda-matchers'
   gem 'simplecov'
 end

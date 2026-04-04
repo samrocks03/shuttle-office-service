@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 class Role < ApplicationRecord
-  has_many :users
+  include UidGenerator
 
-  enum role_type: {
-    admin: 0,
-    user: 1,
-    guest: 2
-  }
+  ROLE_TYPES = { admin: 0, user: 1, guest: 2 }.freeze
+
+  enum role_type: ROLE_TYPES
+
+  has_many :users, dependent: :nullify, inverse_of: :role
 
   validates :name, presence: true
   validates :role_type, presence: true

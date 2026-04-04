@@ -1,26 +1,23 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
-  # apipie
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  mount Rswag::Ui::Engine => '/api-docs'
+  mount Rswag::Api::Engine => '/api-docs'
   get 'up' => 'rails/health#show', as: :rails_health_check
 
-  # Defines the root path route ("/")
-  # root "posts#index"
-  #
-  post '/login', to: 'users#login'
+  namespace 'api' do
+    namespace 'v1' do
+      # Authentication
+      post '/login', to: 'auth#login'
+      post '/register', to: 'auth#register'
 
-  resources :buses do
-    resources :schedules
+      # Resources
+      resources :roles, constraints: { format: :json }
+      resources :companies, constraints: { format: :json }
+      resources :buses, constraints: { format: :json }
+      resources :users, constraints: { format: :json }
+      resources :schedules, constraints: { format: :json }
+      resources :reservations, only: %i[index show create destroy], constraints: { format: :json }
+    end
   end
-
-  resources :roles
-  resources :companies
-  # resources :buses
-  resources :schedules
-  resources :users
-  resources :reservations
 end

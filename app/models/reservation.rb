@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 class Reservation < ApplicationRecord
-  belongs_to :user
-  belongs_to :schedule
-  # has_one :payment
+  include UidGenerator
+
+  belongs_to :user, inverse_of: :reservations
+  belongs_to :schedule, inverse_of: :reservations
 
   validates :schedule_id, :user_id, presence: true
-  validates :schedule_id, uniqueness: { scope: :user_id, message: 'is already booked ' }
+  validates :schedule_id, uniqueness: { scope: :user_id, message: 'is already booked' }
+
   after_create :generate_reservation_pdf
 
   def generate_reservation_pdf

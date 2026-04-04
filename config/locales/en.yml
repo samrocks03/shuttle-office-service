@@ -1,33 +1,175 @@
-# Files in the config/locales directory are used for internationalization
-# and are automatically loaded by Rails. If you want to use locales other
-# than English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# The following keys must be escaped otherwise they will not be retrieved by
-# the default I18n backend:
-#
-# true, false, on, off, yes, no
-#
-# Instead, surround them with single quotes.
-#
-# en:
-#   "true": "foo"
-#
-# To learn more, please read the Rails Internationalization guide
-# available at https://guides.rubyonrails.org/i18n.html.
-
 en:
   hello: "Hello world"
+
+  exception:
+    errors:
+      detail: "An unexpected error occurred: %{message}"
+
+  authentication:
+    errors:
+      unauthorized:
+        detail: "You are not authorized to perform this action"
+      unauthorized_action:
+        detail: "You do not have permission for this action"
+      invalid_credentials:
+        detail: "Email or password is incorrect"
+      login:
+        success:
+          message: "Logged in successfully"
+      register:
+        success:
+          message: "User registered successfully"
+
+  role:
+    index:
+      success:
+        message: "Roles fetched successfully"
+    show:
+      success:
+        message: "Role fetched successfully"
+    create:
+      success:
+        message: "Role created successfully"
+      failure:
+        detail: "Failed to create role: %{message}"
+    update:
+      success:
+        message: "Role updated successfully"
+      failure:
+        detail: "Failed to update role: %{message}"
+    destroy:
+      success:
+        message: "Role deleted successfully"
+      failure:
+        detail: "Failed to delete role"
+    not_found:
+      detail: "Role not found"
+
+  company:
+    index:
+      success:
+        message: "Companies fetched successfully"
+    show:
+      success:
+        message: "Company fetched successfully"
+    create:
+      success:
+        message: "Company created successfully"
+      failure:
+        detail: "Failed to create company: %{message}"
+    update:
+      success:
+        message: "Company updated successfully"
+      failure:
+        detail: "Failed to update company: %{message}"
+    destroy:
+      success:
+        message: "Company deleted successfully"
+      failure:
+        detail: "Failed to delete company"
+    not_found:
+      detail: "Company not found"
+
+  bus:
+    index:
+      success:
+        message: "Buses fetched successfully"
+    show:
+      success:
+        message: "Bus fetched successfully"
+    create:
+      success:
+        message: "Bus created successfully"
+      failure:
+        detail: "Failed to create bus: %{message}"
+    update:
+      success:
+        message: "Bus updated successfully"
+      failure:
+        detail: "Failed to update bus: %{message}"
+    destroy:
+      success:
+        message: "Bus deleted successfully"
+      failure:
+        detail: "Failed to delete bus"
+    not_found:
+      detail: "Bus not found"
+
+  user:
+    index:
+      success:
+        message: "Users fetched successfully"
+    show:
+      success:
+        message: "User fetched successfully"
+    create:
+      success:
+        message: "User created successfully"
+      failure:
+        detail: "Failed to create user: %{message}"
+    update:
+      success:
+        message: "User updated successfully"
+      failure:
+        detail: "Failed to update user: %{message}"
+    destroy:
+      success:
+        message: "User deleted successfully"
+      failure:
+        detail: "Failed to delete user"
+    not_found:
+      detail: "User not found"
+
+  schedule:
+    index:
+      success:
+        message: "Schedules fetched successfully"
+    show:
+      success:
+        message: "Schedule fetched successfully"
+    create:
+      success:
+        message: "Schedule created successfully"
+      failure:
+        detail: "Failed to create schedule: %{message}"
+    update:
+      success:
+        message: "Schedule updated successfully"
+      failure:
+        detail: "Failed to update schedule: %{message}"
+    destroy:
+      success:
+        message: "Schedule deleted successfully"
+      failure:
+        detail: "Failed to delete schedule"
+    not_found:
+      detail: "Schedule not found"
+    date_in_past:
+      detail: "Cannot accept date before today"
+
+  reservation:
+    index:
+      success:
+        message: "Reservations fetched successfully"
+    show:
+      success:
+        message: "Reservation fetched successfully"
+    create:
+      success:
+        message: "Reservation created successfully"
+      failure:
+        detail: "Failed to create reservation: %{message}"
+    update:
+      success:
+        message: "Reservation updated successfully"
+      failure:
+        detail: "Failed to update reservation: %{message}"
+    destroy:
+      success:
+        message: "Reservation deleted successfully"
+      failure:
+        detail: "Failed to delete reservation"
+    not_found:
+      detail: "Reservation not found"
+    no_seats:
+      detail: "Cannot make reservation, no seats available"
