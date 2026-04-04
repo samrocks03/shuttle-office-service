@@ -17,6 +17,7 @@ module ReservationService
         find_and_lock_schedule && check_availability && create_reservation &&
           decrement_seats && set_data && set_response
       end
+      schedule_confirmation_email if reservation&.persisted?
       result || set_response
     end
 
@@ -53,6 +54,10 @@ module ReservationService
 
       add_error('reservation.no_seats')
       false
+    end
+
+    def schedule_confirmation_email
+      ReservationConfirmationJob.perform_later(reservation.id)
     end
 
     def set_data
