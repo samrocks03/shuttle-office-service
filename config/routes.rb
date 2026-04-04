@@ -10,6 +10,7 @@ Rails.application.routes.draw do
       # Authentication
       post '/login', to: 'auth#login'
       post '/register', to: 'auth#register'
+      delete '/logout', to: 'auth#logout'
 
       # Resources
       resources :roles, constraints: { format: :json }

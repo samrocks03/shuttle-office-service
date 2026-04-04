@@ -3,11 +3,28 @@
 module Api
   module V1
     class AuthController < ApplicationController
-      skip_before_action :authenticate, only: %i[login register]
+      skip_before_action :authenticate, only: %i[login register logout]
 
       def login
         result = UserService::Login.new(login_params).call
+
+        if result.success
+          token = result.data.dig(:data, :token)
+          cookies[:token] = {
+            value: token,
+            httponly: true,
+            secure: Rails.env.production?,
+            same_site: :lax,
+            path: '/'
+          }
+        end
+
         render json: result.to_h, status: result.success ? :accepted : :unauthorized
+      end
+
+      def logout
+        cookies.delete(:token, path: '/')
+        render json: { success: true, message: 'Logged out successfully' }, status: :ok
       end
 
       def register

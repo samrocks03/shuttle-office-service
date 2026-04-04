@@ -32,7 +32,12 @@ module UserService
     end
 
     def set_data
-      token = encode_token(user_id: user.id, user_uid: user.uid)
+      token = encode_token(
+        user_id: user.id,
+        user_uid: user.uid,
+        role_type: user.role&.role_type,
+        company_id: user.company_id
+      )
       @data = {
         data: {
           user: V1::UserSerializer.new(user).serializable_hash,
