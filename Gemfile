@@ -42,6 +42,7 @@ gem 'pagy', '~> 8.0' # omit patch digit
 
 # Use Redis adapter to run Action Cable in production
 gem "redis", ">= 4.0.1"
+gem 'sidekiq', '~> 7.0'
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
@@ -79,4 +80,5 @@ end
 group :development do
   # Speed up commands on slow machines / big apps [https://github.com/rails/spring]
   # gem "spring"
+  gem 'letter_opener'
 end
