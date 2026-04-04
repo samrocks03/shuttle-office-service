@@ -33,5 +33,9 @@ module V1
     attribute :bus_capacity do |schedule|
       schedule.bus&.capacity
     end
+
+    attribute :booked_by_current_user do |schedule, params|
+      params[:booked_schedule_ids]&.include?(schedule.id) || false
+    end
   end
 end

@@ -34,9 +34,16 @@ module ScheduleService
     end
 
     def set_data
-      @data = V1::ScheduleSerializer.new(schedules).serializable_hash
+      booked_ids = current_user_booked_schedule_ids
+      @data = V1::ScheduleSerializer.new(schedules, params: { booked_schedule_ids: booked_ids }).serializable_hash
       @data[:meta] = @meta
       @message = translate(SUCCESS_KEY)
+    end
+
+    def current_user_booked_schedule_ids
+      return [] unless @current_user&.dig(:user_id)
+
+      Reservation.where(user_id: @current_user[:user_id]).pluck(:schedule_id)
     end
   end
 end

@@ -52,9 +52,9 @@ function Seatsbadge({ available, capacity }: { available: number; capacity?: num
   );
 }
 
-function ReserveButton({ scheduleId }: { scheduleId: number }) {
+function ReserveButton({ scheduleId, alreadyBooked }: { scheduleId: number; alreadyBooked?: boolean }) {
   const create = useCreateReservation();
-  const [confirmed, setConfirmed] = useState(false);
+  const [confirmed, setConfirmed] = useState(alreadyBooked ?? false);
 
   if (confirmed) {
     return (
@@ -126,7 +126,7 @@ function ScheduleRow({ schedule }: { schedule: IScheduleResource }) {
       <div className="flex items-center justify-between gap-4 sm:justify-end">
         <Seatsbadge available={a.available_seats} capacity={a.bus_capacity} />
         {a.available_seats > 0 ? (
-          <ReserveButton scheduleId={Number(schedule.id)} />
+          <ReserveButton scheduleId={Number(schedule.id)} alreadyBooked={a.booked_by_current_user} />
         ) : (
           <button
             disabled

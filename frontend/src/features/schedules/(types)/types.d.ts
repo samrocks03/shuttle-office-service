@@ -10,6 +10,7 @@ interface IScheduleAttributes {
   bus_capacity?: number;
   company_name?: string;
   company_uid?: string;
+  booked_by_current_user?: boolean;
 }
 
 interface IScheduleResource {

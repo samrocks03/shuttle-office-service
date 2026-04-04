@@ -31,9 +31,9 @@ function SeatsIndicator({ available, capacity }: { available: number; capacity?:
   );
 }
 
-function ReserveButton({ scheduleId }: { scheduleId: number }) {
+function ReserveButton({ scheduleId, alreadyBooked }: { scheduleId: number; alreadyBooked?: boolean }) {
   const create = useCreateReservation();
-  const [confirmed, setConfirmed] = useState(false);
+  const [confirmed, setConfirmed] = useState(alreadyBooked ?? false);
 
   if (confirmed) {
     return (
@@ -115,7 +115,7 @@ function ScheduleRow({ schedule, isAuthenticated }: { schedule: IScheduleResourc
 
       {/* Reserve action */}
       {isAuthenticated && a.available_seats > 0 && (
-        <ReserveButton scheduleId={Number(schedule.id)} />
+        <ReserveButton scheduleId={Number(schedule.id)} alreadyBooked={a.booked_by_current_user} />
       )}
     </div>
   );
