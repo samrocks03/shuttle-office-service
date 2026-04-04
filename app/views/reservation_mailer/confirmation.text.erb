@@ -1,0 +1,27 @@
+Hi <%= @user.first_name %>,
+
+Your shuttle reservation has been confirmed!
+
+ROUTE DETAILS
+------------------------------
+<%= @schedule.departure_time.strftime('%H:%M') %> -> <%= @schedule.arrival_time.strftime('%H:%M') %>
+<%= @schedule.start_point %> -> <%= @company.name %>
+Date: <%= @schedule.date.strftime('%A, %B %d, %Y') %>
+Bus: <%= @bus.number %>
+
+PASSENGER
+------------------------------
+Name: <%= @user.first_name %> <%= @user.last_name %>
+Email: <%= @user.email %>
+
+BOOKING
+------------------------------
+Reservation ID: <%= @reservation.uid %>
+Booked: <%= @reservation.created_at.strftime('%B %d, %Y at %H:%M') %>
+
+Your PDF boarding pass is attached to this email.
+Please present it to the driver when boarding.
+
+--
+Shuttle Office
+Office commuting infrastructure for modern teams.
