@@ -11,6 +11,11 @@ class ReservationConfirmationJob < ApplicationJob
                   .includes(user: :company, schedule: { bus: :company })
                   .find(reservation_id)
 
+    unless reservation.confirmed?
+      logger.info "[ReservationConfirmation] Skipping reservation #{reservation.uid} — status is #{reservation.status}"
+      return
+    end
+
     if reservation.user.email.blank?
       logger.info "[ReservationConfirmation] Skipping reservation #{reservation.uid} — user has no email"
       return

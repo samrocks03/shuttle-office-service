@@ -118,16 +118,32 @@ RSpec.describe Reservations::Transition do
       expect { call('confirmed') }.not_to(change { schedule.reload.available_seats })
     end
 
-    it 'enqueues the job after the lock transaction has finished' do
-      events = []
-      allow(reservation).to receive(:with_lock).and_wrap_original do |original, *args, &block|
-        original.call(*args, &block).tap { events << :lock_released }
-      end
-      allow(ReservationConfirmationJob).to receive(:perform_later) { events << :enqueued }
+    # Specs run inside a transactional fixture whose wrapping transaction is not joinable, so the
+    # transaction opened by with_lock (or by an explicit Reservation.transaction) is a real savepoint
+    # transaction and after_commit callbacks fire when it commits. No special test setup is needed.
+    it 'queues no email and keeps pending_payment when an outer transaction rolls back' do
+      reservation # create before the transaction that gets rolled back
+      expect do
+        Reservation.transaction do
+          expect(call('confirmed')).to be true
+          raise ActiveRecord::Rollback
+        end
+      end.not_to have_enqueued_job(ReservationConfirmationJob)
 
-      call('confirmed')
+      expect(reservation.reload.status).to eq('pending_payment')
+    end
 
-      expect(events).to eq(%i[lock_released enqueued])
+    it 'queues the email once when an outer transaction commits' do
+      expect do
+        Reservation.transaction { call('confirmed') }
+      end.to have_enqueued_job(ReservationConfirmationJob).with(reservation.id).exactly(:once)
+    end
+
+    it 'does not queue the email for a rejected move' do
+      confirmed = create(:reservation, schedule: schedule, status: 'confirmed')
+
+      expect { described_class.call(confirmed, to: 'confirmed', reason: 'spec') }
+        .not_to have_enqueued_job(ReservationConfirmationJob)
     end
   end
 end

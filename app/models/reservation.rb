@@ -24,11 +24,22 @@ class Reservation < ApplicationRecord
     scope: :user_id, message: 'is already booked', conditions: -> { where(status: ACTIVE_STATUSES) }
   }, if: -> { ACTIVE_STATUSES.include?(status) }
 
+  # Queued only when a committed update moved the reservation to confirmed. New records are
+  # excluded: a free booking is created already confirmed and ReservationService::Create queues
+  # its own email. after_commit also keeps the email from going out if an outer transaction rolls back.
+  after_commit :enqueue_confirmation, on: :update, if: -> { saved_change_to_status? && confirmed? }
+
   def open_payments
     payments.where(status: Payment::OPEN)
   end
 
   def succeeded_payment
     payments.find_by(status: 'succeeded')
+  end
+
+  private
+
+  def enqueue_confirmation
+    ReservationConfirmationJob.perform_later(id)
   end
 end

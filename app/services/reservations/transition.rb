@@ -29,9 +29,9 @@ module Reservations
       end
       return false unless moved
 
+      # The boarding-pass email is queued by Reservation's after_commit callback, so it only goes
+      # out once the change is really committed, even when the caller holds an outer transaction.
       Rails.logger.info "[Reservations::Transition] #{@reservation.uid} #{@from} -> #{@to} (#{@reason})"
-      # After the lock's transaction, so the job never runs against an uncommitted row.
-      ReservationConfirmationJob.perform_later(@reservation.id) if @to == 'confirmed'
       true
     end
 
