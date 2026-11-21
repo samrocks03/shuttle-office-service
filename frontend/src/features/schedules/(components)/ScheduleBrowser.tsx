@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, ChevronLeft, ChevronRight, Bus, Clock, MapPin, Users, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSchedules } from "../(queries)/queries";
-import { useCreateReservation } from "@/features/reservations/(queries)/queries";
+import { bffErrorMessage, useBookRide } from "@/features/reservations/(queries)/queries";
 import StatBlock from "./StatBlock";
 import { FareBadge } from "./FareBadge";
 
@@ -33,7 +33,7 @@ function SeatsIndicator({ available, capacity }: { available: number; capacity?:
 }
 
 function ReserveButton({ scheduleId, alreadyBooked }: { scheduleId: number; alreadyBooked?: boolean }) {
-  const create = useCreateReservation();
+  const { book, create } = useBookRide();
   const [confirmed, setConfirmed] = useState(alreadyBooked ?? false);
 
   if (confirmed) {
@@ -46,17 +46,18 @@ function ReserveButton({ scheduleId, alreadyBooked }: { scheduleId: number; alre
   }
 
   return (
-    <button
-      onClick={() =>
-        create.mutate(scheduleId, {
-          onSuccess: () => setConfirmed(true),
-        })
-      }
-      disabled={create.isPending}
-      className="rounded-lg bg-brand-600 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-brand-700 active:translate-y-px disabled:opacity-50"
-    >
-      {create.isPending ? "Booking..." : "Reserve"}
-    </button>
+    <div className="flex flex-col items-end gap-1">
+      <button
+        onClick={() => book(scheduleId, () => setConfirmed(true))}
+        disabled={create.isPending}
+        className="rounded-lg bg-brand-600 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-brand-700 active:translate-y-px disabled:opacity-50"
+      >
+        {create.isPending ? "Booking..." : "Reserve"}
+      </button>
+      {create.isError && (
+        <p className="max-w-56 text-right text-xs text-red-600">{bffErrorMessage(create.error)}</p>
+      )}
+    </div>
   );
 }
 

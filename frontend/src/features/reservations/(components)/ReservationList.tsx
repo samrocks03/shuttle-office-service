@@ -1,14 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Clock, Building2, X, ChevronLeft, ChevronRight, Ticket } from "lucide-react";
+import Link from "next/link";
+import { Clock, Building2, X, ChevronLeft, ChevronRight, Ticket, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useReservations, useCancelReservation } from "../(queries)/queries";
+import { formatFare, minutesLeft, useNow } from "@/features/payments/(components)/format";
+import { useReservations, useCancelReservation, bffErrorMessage } from "../(queries)/queries";
 
-function ReservationCard({ reservation }: { reservation: IReservationResource }) {
+const STATUS_BADGES: Record<ReservationStatus, { label: string; className: string }> = {
+  pending_payment: { label: "Pending payment", className: "bg-amber-500/10 text-amber-700" },
+  confirmed: { label: "Confirmed", className: "bg-accent-500/10 text-accent-700" },
+  cancelled: { label: "Cancelled", className: "bg-surface-container-low text-on-surface-variant" },
+  expired: { label: "Expired", className: "bg-red-500/10 text-red-700" },
+};
+
+function StatusBadge({ status, paid }: { status: ReservationStatus; paid: boolean }) {
+  const badge = STATUS_BADGES[status] ?? STATUS_BADGES.confirmed;
+  // A confirmed booking with a fare was paid for; a free one is simply confirmed.
+  const label = status === "confirmed" && paid ? "Paid" : badge.label;
+  return (
+    <span
+      data-testid="reservation-status"
+      className={cn("rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider", badge.className)}
+    >
+      {label}
+    </span>
+  );
+}
+
+/** Schedule date (YYYY-MM-DD) and departure (HH:MM) as a local time, for the cancel button only. */
+function departsAt(schedule: IReservationSchedule) {
+  return new Date(`${schedule.date}T${schedule.departure_time}:00`).getTime();
+}
+
+function ReservationCard({ reservation, now }: { reservation: IReservationResource; now: number }) {
   const a = reservation.attributes;
   const cancel = useCancelReservation();
   const [confirming, setConfirming] = useState(false);
+  const [refundStarted, setRefundStarted] = useState(false);
+
+  const paid = a.fare != null;
+  const holdLeft = a.status === "pending_payment" ? minutesLeft(a.hold_expires_at, now) : 0;
+  // Rails has the final say (cancel_too_late); this only hides a button that cannot work.
+  const canCancel =
+    a.status === "pending_payment" || (a.status === "confirmed" && departsAt(a.schedule) > now);
+  const fare = formatFare(a.fare);
 
   return (
     <div className="flex items-start gap-4 rounded-xl border border-transparent bg-surface-container-lowest px-5 py-4 transition-all hover:border-[#c7c4d8]/20 hover:shadow-sm">
@@ -24,6 +60,7 @@ function ReservationCard({ reservation }: { reservation: IReservationResource })
           <span className="rounded bg-surface-container-low px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
             {a.schedule.date}
           </span>
+          <StatusBadge status={a.status} paid={paid} />
         </div>
 
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-on-surface-variant">
@@ -39,16 +76,38 @@ function ReservationCard({ reservation }: { reservation: IReservationResource })
               {a.schedule.company_name}
             </span>
           )}
+          {fare && <span className="font-mono font-semibold tabular-nums text-on-surface">{fare}</span>}
+          {holdLeft > 0 && (
+            <span className="font-mono text-amber-700" data-testid="hold-left">
+              {holdLeft} min left to pay
+            </span>
+          )}
         </div>
+        {cancel.isError && (
+          <p className="mt-2 text-xs text-red-600">{bffErrorMessage(cancel.error)}</p>
+        )}
+        {refundStarted && (
+          <p className="mt-2 text-xs text-on-surface-variant">Cancelled. Your fare will be refunded to the same payment method.</p>
+        )}
       </div>
 
-      {/* Cancel action */}
-      <div className="shrink-0">
-        {confirming ? (
+      {/* Actions */}
+      <div className="flex shrink-0 items-center gap-2">
+        {holdLeft > 0 && (
+          <Link
+            href={`/employee/reservations/${a.uid}/pay`}
+            className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-brand-700"
+          >
+            <CreditCard className="h-3 w-3" />
+            Pay now
+          </Link>
+        )}
+        {!canCancel ? null : confirming ? (
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                cancel.mutate(a.uid);
+                const refundDue = paid && a.status === "confirmed";
+                cancel.mutate(a.uid, { onSuccess: () => setRefundStarted(refundDue) });
                 setConfirming(false);
               }}
               disabled={cancel.isPending}
@@ -92,6 +151,7 @@ function SkeletonCard() {
 export function ReservationList() {
   const [page, setPage] = useState(1);
   const { data, isLoading, isFetching } = useReservations(page);
+  const now = useNow();
 
   const reservations = data?.data ?? [];
   const meta = data?.meta;
@@ -133,7 +193,7 @@ export function ReservationList() {
           </div>
         ) : (
           reservations.map((reservation) => (
-            <ReservationCard key={reservation.id} reservation={reservation} />
+            <ReservationCard key={reservation.id} reservation={reservation} now={now} />
           ))
         )}
       </div>
