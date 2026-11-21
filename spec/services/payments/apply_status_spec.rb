@@ -102,6 +102,42 @@ RSpec.describe Payments::ApplyStatus do
     end
   end
 
+  describe 'statuses only move forward' do
+    it 'keeps a succeeded payment succeeded when a stale processing status arrives' do
+      apply('succeeded')
+
+      expect(apply('processing', error: 'stale', target: Payment.find(payment.id))).to eq(:unchanged)
+      expect(payment.reload).to have_attributes(status: 'succeeded', last_error: nil)
+      expect(reservation.reload.status).to eq('confirmed')
+    end
+
+    it 'keeps a succeeded payment succeeded when a failed status arrives' do
+      apply('succeeded')
+
+      expect(apply('failed', target: Payment.find(payment.id))).to eq(:unchanged)
+      expect(payment.reload.status).to eq('succeeded')
+    end
+
+    it 'does not move a failed payment back to processing' do
+      apply('failed', error: 'card declined')
+
+      expect(apply('processing', target: Payment.find(payment.id))).to eq(:unchanged)
+      expect(payment.reload).to have_attributes(status: 'failed', last_error: 'card declined')
+    end
+
+    it 'still records a success reported after a failure, and confirms' do
+      apply('failed', error: 'card declined')
+
+      expect(apply('succeeded', target: Payment.find(payment.id))).to eq(:confirmed)
+      expect(payment.reload).to have_attributes(status: 'succeeded', last_error: nil)
+    end
+
+    it 'ignores data with no status' do
+      expect(apply(nil)).to eq(:unchanged)
+      expect(payment.reload.status).to eq('requires_payment_method')
+    end
+  end
+
   describe 'a failed payment' do
     it 'stores the failure on the payment and keeps the reservation pending_payment' do
       result = nil
@@ -130,6 +166,25 @@ RSpec.describe Payments::ApplyStatus do
       expect(result).to eq(:unchanged)
       expect(refund.reload.status).to eq('succeeded')
       expect(payment.reload.status).to eq('requires_payment_method')
+    end
+
+    it 'keeps a succeeded refund succeeded when a stale pending status arrives' do
+      refund = create_refund_row(payment, gateway_refund_id: 'ref_xyz')
+      refund.update!(status: 'succeeded')
+
+      result = described_class.new(payment, { id: 'pay_abc', refund_id: 'ref_xyz', status: 'pending' }).call
+
+      expect(result).to eq(:unchanged)
+      expect(refund.reload.status).to eq('succeeded')
+    end
+
+    it 'does not move a failed refund back to pending' do
+      refund = create_refund_row(payment, gateway_refund_id: 'ref_xyz')
+      refund.update!(status: 'failed')
+
+      described_class.new(payment, { id: 'pay_abc', refund_id: 'ref_xyz', status: 'pending' }).call
+
+      expect(refund.reload.status).to eq('failed')
     end
 
     it 'ignores a refund this payment does not have' do

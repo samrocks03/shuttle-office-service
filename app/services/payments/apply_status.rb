@@ -12,6 +12,8 @@ module Payments
   class ApplyStatus
     LATE_SUCCESS_REASON = 'late_success'
     LATE_STATES = %w[expired cancelled].freeze
+    PAYMENT_FINAL = %w[succeeded failed cancelled].freeze
+    REFUND_FINAL = %w[succeeded failed].freeze
 
     def initialize(payment, gateway_data)
       @payment = payment
@@ -25,15 +27,36 @@ module Payments
       ActiveRecord::Base.transaction do
         reservation.lock!
         @payment.lock!
+        unless forward?(@payment.status, PAYMENT_FINAL)
+          next stale("payment #{@payment.gateway_payment_id}", @payment.status)
+        end
+
         already_succeeded = @payment.succeeded?
-        @payment.update!(status: @data[:status].presence || @payment.status,
-                         connector: @data[:connector].presence || @payment.connector,
+        @payment.update!(status: @data[:status], connector: @data[:connector].presence || @payment.connector,
                          last_error: @data[:error])
         outcome(reservation, already_succeeded)
       end
     end
 
     private
+
+    # Statuses only move forward, because events and syncs can arrive late or twice. Nothing leaves
+    # succeeded. A final failed (or cancelled) status never goes back to an open one, but may still
+    # become succeeded: a success reported by the gateway means money moved, and it must be recorded
+    # (and then confirmed or refunded) rather than dropped. Retries normally use a new payment id.
+    def forward?(from, final)
+      to = @data[:status]
+      return false if to.blank?
+      return true if from == to || !final.include?(from)
+
+      from != 'succeeded' && to == 'succeeded'
+    end
+
+    def stale(label, current)
+      Rails.logger.info "[Payments::ApplyStatus] ignored status #{@data[:status].inspect} for #{label} " \
+                        "(already #{current})"
+      :unchanged
+    end
 
     def outcome(reservation, already_succeeded)
       return :failed if @payment.status == 'failed'
@@ -70,13 +93,18 @@ module Payments
 
     def apply_refund
       refund = @payment.refunds.find_by(gateway_refund_id: @data[:refund_id])
-      if refund
-        refund.update!(status: @data[:status]) if @data[:status].present?
-      else
+      unless refund
         Rails.logger.info "[Payments::ApplyStatus] unknown refund #{@data[:refund_id]} for payment " \
                           "#{@payment.gateway_payment_id}"
+        return :unchanged
       end
-      :unchanged
+
+      refund.with_lock do
+        next stale("refund #{refund.gateway_refund_id}", refund.status) unless forward?(refund.status, REFUND_FINAL)
+
+        refund.update!(status: @data[:status])
+        :unchanged
+      end
     end
   end
 end

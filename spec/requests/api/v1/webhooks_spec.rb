@@ -81,6 +81,24 @@ RSpec.describe 'Api::V1::Webhooks', type: :request do
     end
   end
 
+  it 'keeps a succeeded payment succeeded on a late payment_processing, so a cancel refunds it once' do
+    reservation.update!(fare_amount_minor: 3500, currency: 'INR')
+    deliver(payment_event('evt_1'))
+    deliver(payment_event('evt_2', event_type: 'payment_processing', status: 'processing'))
+
+    expect(response).to have_http_status(:ok)
+    expect(payment.reload.status).to eq('succeeded')
+    expect(reservation.reload.status).to eq('confirmed')
+
+    delete "/api/v1/reservations/#{reservation.uid}.json", headers: auth_headers(reservation.user)
+
+    expect(response).to have_http_status(:ok)
+    expect(reservation.reload.status).to eq('cancelled')
+    expect(gateway.calls[:create_refund]).to eq([{ payment_id: 'pay_abc', amount_minor: 3500,
+                                                   reason: 'reservation_cancelled' }])
+    expect(payment.refunds.sole).to have_attributes(amount_minor: 3500, reason: 'reservation_cancelled')
+  end
+
   it 'keeps the reservation pending_payment on payment_failed' do
     deliver(payment_event('evt_1', event_type: 'payment_failed', status: 'failed'))
 
