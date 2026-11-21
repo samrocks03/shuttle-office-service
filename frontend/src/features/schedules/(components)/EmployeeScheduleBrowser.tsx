@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSchedules } from "../(queries)/queries";
 import { useCreateReservation } from "@/features/reservations/(queries)/queries";
+import { FareBadge } from "./FareBadge";
 
 const PER_PAGE = 8;
 
@@ -122,8 +123,9 @@ function ScheduleRow({ schedule }: { schedule: IScheduleResource }) {
         </div>
       </div>
 
-      {/* Right: seats + action */}
-      <div className="flex items-center justify-between gap-4 sm:justify-end">
+      {/* Right: fare + seats + action */}
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
+        <FareBadge fare={a.fare} serviceClass={a.bus_service_class} />
         <Seatsbadge available={a.available_seats} capacity={a.bus_capacity} />
         {a.available_seats > 0 ? (
           <ReserveButton scheduleId={Number(schedule.id)} alreadyBooked={a.booked_by_current_user} />
@@ -234,6 +236,12 @@ function RouteTimeline({ schedule }: { schedule: IScheduleResource | undefined }
           <div className="text-sm font-bold text-on-surface">Destination</div>
           <div className="font-mono text-xs tabular-nums text-on-surface-variant">{formatTime(a.arrival_time)}</div>
         </div>
+      </div>
+
+      {/* Fare */}
+      <div className="flex items-center justify-between rounded-xl bg-surface-container-low p-3">
+        <span className="font-mono text-[10px] font-bold uppercase text-on-surface-variant">Fare</span>
+        <FareBadge fare={a.fare} serviceClass={a.bus_service_class} />
       </div>
 
       {/* Seats remaining */}

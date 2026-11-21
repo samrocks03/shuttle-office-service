@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useSchedules } from "../(queries)/queries";
 import { useCreateReservation } from "@/features/reservations/(queries)/queries";
 import StatBlock from "./StatBlock";
+import { FareBadge } from "./FareBadge";
 
 const PER_PAGE = 10;
 
@@ -109,6 +110,9 @@ function ScheduleRow({ schedule, isAuthenticated }: { schedule: IScheduleResourc
           </div>
         </div>
       </div>
+
+      {/* Fare */}
+      <FareBadge fare={a.fare} serviceClass={a.bus_service_class} className="hidden md:inline-flex" />
 
       {/* Seats */}
       <SeatsIndicator available={a.available_seats} capacity={a.bus_capacity} />
