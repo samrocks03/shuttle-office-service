@@ -49,7 +49,9 @@ class Schedule < ApplicationRecord
   end
 
   def set_default_available_seats
-    self.available_seats ||= bus.capacity if bus
+    return unless available_seats.nil? && bus
+
+    self.available_seats = bus.capacity
   end
 
   def unique_schedule_within_duration

@@ -29,7 +29,7 @@ module BusService
     end
 
     def update_bus
-      return true if bus.update(params.slice(:number, :capacity, :model, :company_id))
+      return true if bus.update(params.slice(:number, :capacity, :model, :company_id, :service_class))
 
       add_error('bus.update.failure', message: bus.errors.full_messages.join(', '))
       false

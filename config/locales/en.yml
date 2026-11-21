@@ -146,6 +146,8 @@ en:
       detail: "Schedule not found"
     date_in_past:
       detail: "Cannot accept date before today"
+    stop_not_found:
+      detail: "Stop not found: %{uid}"
 
   reservation:
     index:

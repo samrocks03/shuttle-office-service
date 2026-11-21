@@ -19,4 +19,40 @@ stops:
   - { name: EON IT Park Kharadi, kind: office, latitude: 18.551815, longitude: 73.951153, osm_ref: "way/206530452" }
   - { name: Magarpatta City, kind: office, latitude: 18.520649, longitude: 73.927844, osm_ref: "way/466980645" }
   - { name: Commerzone Yerawada, kind: office, latitude: 18.562325, longitude: 73.884078, osm_ref: "way/257626683" }
-fares: []   # filled in Task 7
+# Fares: BEST (Mumbai) slabs for Pune, in paise. Prices change by adding a table with a later
+# effective_from, never by editing a table that already has slabs.
+fares:
+  - service_class: non_ac
+    effective_from: '2026-12-01'
+    currency: INR
+    policy: slab
+    step_km: 5
+    step_amount_minor: 500
+    slabs:
+      - { up_to_km: 5, amount_minor: 1000 }
+      - { up_to_km: 10, amount_minor: 1500 }
+      - { up_to_km: 15, amount_minor: 2000 }
+      - { up_to_km: 20, amount_minor: 3000 }
+      - { up_to_km: 25, amount_minor: 3500 }
+      - { up_to_km: 30, amount_minor: 4000 }
+      - { up_to_km: 35, amount_minor: 4500 }
+      - { up_to_km: 40, amount_minor: 5000 }
+      - { up_to_km: 45, amount_minor: 5500 }
+      - { up_to_km: 50, amount_minor: 6000 }
+  - service_class: ac
+    effective_from: '2026-12-01'
+    currency: INR
+    policy: slab
+    step_km: 5
+    step_amount_minor: 500
+    slabs:
+      - { up_to_km: 5, amount_minor: 1200 }
+      - { up_to_km: 10, amount_minor: 2000 }
+      - { up_to_km: 15, amount_minor: 3000 }
+      - { up_to_km: 20, amount_minor: 3500 }
+      - { up_to_km: 25, amount_minor: 4000 }
+      - { up_to_km: 30, amount_minor: 4500 }
+      - { up_to_km: 35, amount_minor: 5000 }
+      - { up_to_km: 40, amount_minor: 5500 }
+      - { up_to_km: 45, amount_minor: 6000 }
+      - { up_to_km: 50, amount_minor: 6500 }

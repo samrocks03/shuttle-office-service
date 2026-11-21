@@ -44,6 +44,31 @@ RSpec.describe 'Api::V1::Buses', type: :request do
       post '/api/v1/buses.json', params: { bus: { number: '' } }.to_json, headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
     end
+
+    it 'creates an AC bus and returns its service class' do
+      post '/api/v1/buses.json', params: {
+        bus: { number: 'BUS-998', capacity: 40, model: 'Volvo', company_id: company.id, service_class: 'ac' }
+      }.to_json, headers: headers
+
+      expect(response).to have_http_status(:created)
+      expect(json_response['data']['attributes']['service_class']).to eq('ac')
+    end
+
+    it 'defaults the service class to non_ac' do
+      post '/api/v1/buses.json', params: {
+        bus: { number: 'BUS-997', capacity: 40, model: 'Volvo', company_id: company.id }
+      }.to_json, headers: headers
+
+      expect(json_response['data']['attributes']['service_class']).to eq('non_ac')
+    end
+
+    it 'rejects an unknown service class' do
+      post '/api/v1/buses.json', params: {
+        bus: { number: 'BUS-996', capacity: 40, model: 'Volvo', company_id: company.id, service_class: 'luxury' }
+      }.to_json, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
   end
 
   describe 'PATCH /api/v1/buses/:id' do
@@ -52,6 +77,20 @@ RSpec.describe 'Api::V1::Buses', type: :request do
     it 'updates the bus' do
       patch "/api/v1/buses/#{bus.uid}.json", params: { bus: { capacity: 50 } }.to_json, headers: headers
       expect(response).to have_http_status(:ok)
+    end
+
+    it 'changes the service class' do
+      patch "/api/v1/buses/#{bus.uid}.json", params: { bus: { service_class: 'ac' } }.to_json, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(bus.reload.service_class).to eq('ac')
+    end
+
+    it 'rejects an unknown service class on update' do
+      patch "/api/v1/buses/#{bus.uid}.json", params: { bus: { service_class: 'luxury' } }.to_json, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(bus.reload.service_class).to eq('non_ac')
     end
   end
 

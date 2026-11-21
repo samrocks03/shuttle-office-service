@@ -31,7 +31,8 @@ module Api
       private
 
       def schedule_params
-        params.require(:schedule).permit(:start_point, :arrival_time, :departure_time, :date, :bus_id)
+        params.require(:schedule).permit(:start_point, :arrival_time, :departure_time, :date, :bus_id,
+                                         :from_stop_uid, :to_stop_uid)
       end
     end
   end

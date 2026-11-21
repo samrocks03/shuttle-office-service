@@ -3,7 +3,7 @@
 class FareTable < ApplicationRecord
   include UidGenerator
 
-  belongs_to :city
+  belongs_to :city, inverse_of: :fare_tables
   has_many :fare_slabs, -> { order(:up_to_km) }, dependent: :destroy, inverse_of: :fare_table
 
   validates :service_class, inclusion: { in: Bus::SERVICE_CLASSES }

@@ -25,7 +25,8 @@ module BusService
         number: params[:number],
         capacity: params[:capacity],
         model: params[:model],
-        company_id: params[:company_id]
+        company_id: params[:company_id],
+        **params.slice(:service_class).compact
       )
       return true if bus.save
 

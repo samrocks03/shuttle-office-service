@@ -6,6 +6,20 @@ module V1
 
     attributes :uid, :start_point, :date, :available_seats, :created_at, :updated_at
 
+    # Every serialization gets its own memo so `fare` and `fare_unavailable_reason` share one quote
+    # lookup per schedule.
+    def initialize(resource, options = {})
+      params = (options[:params] || {}).merge(fare_quotes: {}.compare_by_identity)
+      super(resource, options.merge(params: params))
+    end
+
+    def self.quote_for(schedule, params)
+      params[:fare_quotes][schedule] ||= begin
+        service = Fares::QuoteForSchedule.new(schedule)
+        [service.call, service.reason]
+      end
+    end
+
     attribute :arrival_time do |schedule|
       schedule.arrival_time&.strftime('%H:%M')
     end
@@ -32,6 +46,21 @@ module V1
 
     attribute :bus_capacity do |schedule|
       schedule.bus&.capacity
+    end
+
+    attribute :fare do |schedule, params|
+      quote, = quote_for(schedule, params)
+      quote && {
+        amount_minor: quote.amount_minor,
+        currency: quote.currency,
+        distance_km: quote.distance_km.to_f.round(3),
+        slab_label: quote.slab_label
+      }
+    end
+
+    attribute :fare_unavailable_reason do |schedule, params|
+      _, reason = quote_for(schedule, params)
+      reason&.to_s
     end
 
     attribute :booked_by_current_user do |schedule, params|

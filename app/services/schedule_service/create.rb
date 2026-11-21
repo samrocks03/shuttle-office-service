@@ -2,6 +2,8 @@
 
 module ScheduleService
   class Create < Base
+    include StopUids
+
     attr_reader :params, :current_user, :schedule
     SUCCESS_KEY = 'schedule.create.success.message'
 
@@ -13,7 +15,7 @@ module ScheduleService
 
     def call
       result = ActiveRecord::Base.transaction do
-        validate_date && create_schedule && set_data && set_response
+        validate_date && assign_stops && create_schedule && set_data && set_response
       end
       result || set_response
     end
@@ -28,13 +30,19 @@ module ScheduleService
       false
     end
 
+    def assign_stops
+      @stop_ids = resolve_stop_ids
+      @stop_ids != false
+    end
+
     def create_schedule
       @schedule = Schedule.new(
         start_point: params[:start_point],
         arrival_time: params[:arrival_time],
         departure_time: params[:departure_time],
         date: params[:date],
-        bus_id: params[:bus_id]
+        bus_id: params[:bus_id],
+        **@stop_ids
       )
       return true if schedule.save
 
