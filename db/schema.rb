@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_11_21_000005) do
+ActiveRecord::Schema[7.0].define(version: 2026_11_21_000006) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -52,6 +52,35 @@ ActiveRecord::Schema[7.0].define(version: 2026_11_21_000005) do
     t.index ["city_id"], name: "index_companies_on_city_id"
     t.index ["name"], name: "index_companies_on_name", unique: true
     t.index ["uid"], name: "index_companies_on_uid", unique: true
+  end
+
+  create_table "fare_slabs", force: :cascade do |t|
+    t.uuid "uid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "fare_table_id", null: false
+    t.decimal "up_to_km", precision: 8, scale: 3, null: false
+    t.integer "amount_minor", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fare_table_id", "up_to_km"], name: "index_fare_slabs_on_fare_table_id_and_up_to_km", unique: true
+    t.index ["fare_table_id"], name: "index_fare_slabs_on_fare_table_id"
+    t.index ["uid"], name: "index_fare_slabs_on_uid", unique: true
+  end
+
+  create_table "fare_tables", force: :cascade do |t|
+    t.uuid "uid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "city_id", null: false
+    t.string "service_class", null: false
+    t.string "currency", null: false
+    t.string "policy", default: "slab", null: false
+    t.date "effective_from", null: false
+    t.boolean "active", default: true, null: false
+    t.decimal "step_km", precision: 8, scale: 3
+    t.integer "step_amount_minor"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["city_id", "service_class", "effective_from"], name: "index_fare_tables_on_lookup"
+    t.index ["city_id"], name: "index_fare_tables_on_city_id"
+    t.index ["uid"], name: "index_fare_tables_on_uid", unique: true
   end
 
   create_table "reservations", force: :cascade do |t|
@@ -156,6 +185,8 @@ ActiveRecord::Schema[7.0].define(version: 2026_11_21_000005) do
 
   add_foreign_key "buses", "companies"
   add_foreign_key "companies", "cities"
+  add_foreign_key "fare_slabs", "fare_tables"
+  add_foreign_key "fare_tables", "cities"
   add_foreign_key "reservations", "schedules"
   add_foreign_key "reservations", "users"
   add_foreign_key "schedules", "buses"
