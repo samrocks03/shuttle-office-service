@@ -186,6 +186,14 @@ en:
         no_fare_table: "there is no fare table for this bus type on this date"
     payment_start_failed:
       detail: "We could not start the payment, so your seat was not held. Please try again."
+    payment_status:
+      success:
+        message: "Payment status fetched successfully"
+    retry_payment:
+      success:
+        message: "Payment restarted"
+    retry_not_allowed:
+      detail: "This payment cannot be retried. Please check its status, or book again if the hold has ended."
     cancel:
       success:
         message: "Reservation cancelled"

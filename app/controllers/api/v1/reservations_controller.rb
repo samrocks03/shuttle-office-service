@@ -23,7 +23,21 @@ module Api
         render json: result.to_h, status: result.success ? :ok : destroy_failure_status(result)
       end
 
+      def payment_status
+        result = ReservationService::PaymentStatus.new(params, current_user_params).call
+        render json: result.to_h, status: result.success ? :ok : :not_found
+      end
+
+      def retry_payment
+        result = ReservationService::RetryPayment.new(params, current_user_params).call
+        render json: result.to_h, status: result.success ? :ok : retry_failure_status(result)
+      end
+
       private
+
+      def retry_failure_status(result)
+        result.error_key == 'reservation.not_found' ? :not_found : :unprocessable_entity
+      end
 
       def create_failure_status(result)
         result.error_key == 'reservation.guest_forbidden' ? :forbidden : :unprocessable_entity
