@@ -1,0 +1,19 @@
+{
+  "payment_id": "pay_8Hq2Zk0vLxT3mNcWbR4e",
+  "merchant_id": "merchant_shuttle",
+  "status": "failed",
+  "amount": 3500,
+  "net_amount": 3500,
+  "amount_capturable": 0,
+  "amount_received": null,
+  "currency": "INR",
+  "capture_method": "automatic",
+  "email": "rider@example.com",
+  "profile_id": "pro_shuttle123",
+  "metadata": { "reservation_uid": "res_abc123" },
+  "connector": "razorpay",
+  "connector_transaction_id": "pay_Nx12AbCdEfGh34",
+  "error_code": "card_declined",
+  "error_message": "Your card was declined by the issuer",
+  "attempt_count": 1
+}
