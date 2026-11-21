@@ -13,9 +13,10 @@ module Payments
     SIGNATURE_HEADER = 'x-webhook-signature-512'
     CANCELLATION_REASON = 'reservation_cancelled'
 
+    # SystemCallError covers every Errno (ECONNREFUSED, ECONNRESET, EHOSTUNREACH, ETIMEDOUT, EPIPE, ...).
     NETWORK_ERRORS = [
-      EOFError, IOError, Net::HTTPBadResponse, Net::ProtocolError, SocketError,
-      Errno::ECONNREFUSED, Errno::ECONNRESET, Timeout::Error, OpenSSL::SSL::SSLError
+      EOFError, IOError, Net::HTTPBadResponse, Net::ProtocolError, SocketError, SystemCallError,
+      Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout, Timeout::Error, OpenSSL::SSL::SSLError
     ].freeze
 
     def initialize(base_url:, api_key:, profile_id:, webhook_secret:)

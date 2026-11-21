@@ -231,7 +231,8 @@ RSpec.describe Payments::Hyperswitch do
     end
 
     [
-      Errno::ECONNREFUSED, SocketError, EOFError, IOError, Net::HTTPBadResponse, Net::ProtocolError,
+      Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ETIMEDOUT, Errno::EPIPE, Errno::ENETUNREACH,
+      SocketError, EOFError, IOError, Net::HTTPBadResponse, Net::ProtocolError, Net::WriteTimeout,
       Timeout::Error, OpenSSL::SSL::SSLError
     ].each do |error_class|
       it "maps #{error_class} to a failed result" do

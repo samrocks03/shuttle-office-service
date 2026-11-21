@@ -13,7 +13,8 @@
  *   E2E_CARD_NUMBER        a public Visa success test card number (required)
  *   E2E_EMPLOYEE_PASSWORD  password of the demo employee (required)
  *   E2E_EMPLOYEE_EMAIL     defaults to the dev demo employee
- *   E2E_SCHEDULE_DATE      defaults to 2026-12-02
+ *   E2E_SCHEDULE_DATE      defaults to the date of the next priced, paid schedule on the
+ *                          route after today (looked up through the app's API)
  *   E2E_SCHEDULE_ROUTE     defaults to "Wakad to Kharadi" (AC, priced)
  *
  * Repeatable: before booking, the test cancels the demo employee's own active
@@ -28,8 +29,41 @@ import { expect, test, type Page } from "@playwright/test";
 const EMAIL = process.env.E2E_EMPLOYEE_EMAIL ?? "task8-demo@example.test";
 const PASSWORD = process.env.E2E_EMPLOYEE_PASSWORD;
 const CARD_NUMBER = process.env.E2E_CARD_NUMBER;
-const DATE = process.env.E2E_SCHEDULE_DATE ?? "2026-12-02";
 const ROUTE = process.env.E2E_SCHEDULE_ROUTE ?? "Wakad to Kharadi";
+/** Set in the first step: E2E_SCHEDULE_DATE, or the next upcoming priced schedule on ROUTE. */
+let DATE = process.env.E2E_SCHEDULE_DATE ?? "";
+
+interface ScheduleRow {
+  attributes: {
+    start_point: string;
+    date: string;
+    available_seats: number;
+    payments_enabled?: boolean;
+    fare: unknown;
+  };
+}
+
+/** YYYY-MM-DD of today in local time (schedule dates are local calendar dates). */
+function localToday() {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/** Date of the first schedule on ROUTE after today that is paid, priced and has a free seat. */
+async function upcomingScheduleDate(page: Page) {
+  const query = new URLSearchParams({ start_point: ROUTE, sort_by: "date", sort_order: "asc", per_page: "100" });
+  const res = await page.request.get(`/api/v1/schedules?${query}`);
+  expect(res.ok(), "list schedules").toBeTruthy();
+  const body = (await res.json()) as { data: ScheduleRow[] };
+  const today = localToday();
+  const match = body.data.find(
+    ({ attributes: a }) =>
+      a.start_point === ROUTE && a.date > today && a.payments_enabled && a.fare != null && a.available_seats > 0,
+  );
+  expect(match, `no upcoming priced schedule for "${ROUTE}"; seed one or set E2E_SCHEDULE_DATE`).toBeTruthy();
+  return match!.attributes.date;
+}
 
 interface ReservationRow {
   attributes: {
@@ -72,6 +106,7 @@ test("rider books a priced ride and pays by card", async ({ page }) => {
 
   await test.step("sign in and reset the ride", async () => {
     await signIn(page);
+    if (!DATE) DATE = await upcomingScheduleDate(page);
     await cancelActiveReservations(page);
   });
 

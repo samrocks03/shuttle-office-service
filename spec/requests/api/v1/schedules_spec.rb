@@ -91,6 +91,19 @@ RSpec.describe 'Api::V1::Schedules', type: :request do
       delete "/api/v1/schedules/#{schedule.uid}.json", headers: headers
       expect(response).to have_http_status(:ok)
     end
+
+    it 'refuses with 422 and a plain message when a reservation on it has a payment' do
+      reservation = create(:reservation, schedule: schedule, status: 'expired', fare_amount_minor: 3500,
+                                         currency: 'INR')
+      create(:payment, reservation: reservation, status: 'cancelled')
+
+      delete "/api/v1/schedules/#{schedule.uid}.json", headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response['errors']['base']).to eq(['This record has payment history and cannot be deleted'])
+      expect(Schedule.exists?(schedule.id)).to be(true)
+      expect(reservation.reload).to be_expired
+    end
   end
 
   describe 'fare on schedules' do

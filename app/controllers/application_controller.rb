@@ -18,6 +18,12 @@ class ApplicationController < ActionController::API
     render json: { success: false, errors: { base: ["#{field} already exists"] } }, status: :conflict
   end
 
+  # A record whose dependents must be kept (a reservation with payments, a payment with refunds).
+  rescue_from ActiveRecord::DeleteRestrictionError do
+    render json: { success: false, errors: { base: ['This record has payment history and cannot be deleted'] } },
+           status: :unprocessable_entity
+  end
+
   rescue_from ActiveRecord::StatementInvalid do |exception|
     status = exception.message.include?('PG::UndefinedColumn') ? :unprocessable_entity : :internal_server_error
     render json: { success: false, errors: { base: [exception.message] } }, status: status
