@@ -349,7 +349,7 @@ verify_webhook(raw_body:, headers:) -> Boolean
 
 - [ ] **Step 1: Implement** the pages and components.
 - [ ] **Step 2: Verify** `cd frontend && npm run lint && npx tsc --noEmit`.
-- [ ] **Step 3: Verify in the browser** with Rails, Sidekiq, the lab and the frontend running: book a paid schedule, pay with Stripe test card 4242 4242 4242 4242, see Paid and the boarding-pass email in letter_opener; book another and pay by UPI with Razorpay's test success id; switch Stripe to "Down: refuses" in the lab and confirm the payment falls back or fails as the lab README describes. Screenshot each result.
+- [ ] **Step 3: Verify in the browser** with Rails, Sidekiq, the lab and the frontend running: book a paid schedule, pay with Stripe test card the card number from ENV `E2E_CARD_NUMBER` (a public Visa success test card; never committed), see Paid and the boarding-pass email in letter_opener; book another and pay by UPI with Razorpay's test success id; switch Stripe to "Down: refuses" in the lab and confirm the payment falls back or fails as the lab README describes. Screenshot each result.
 - [ ] **Step 4: Commit** `feat(frontend): pay for rides with Hyperswitch checkout`.
 
 ### Task 17: Admin pages for stops, distances and fares
@@ -373,6 +373,6 @@ verify_webhook(raw_body:, headers:) -> Boolean
 - Modify: `frontend/package.json` (dev dependency `@playwright/test`, script `e2e`)
 - Create: `frontend/playwright.config.ts`, `frontend/e2e/paid-ride.spec.ts`
 
-- [ ] **Step 1: Write the test:** sign in as a seeded employee, open a priced Pune schedule, book, pay with card 4242 4242 4242 4242 in the Hyperswitch iframe, expect the result page heading "Paid" within 30 s and the reservation list badge "Paid".
+- [ ] **Step 1: Write the test:** sign in as a seeded employee, open a priced Pune schedule, book, pay with card the card number from ENV `E2E_CARD_NUMBER` (a public Visa success test card; never committed) in the Hyperswitch iframe, expect the result page heading "Paid" within 30 s and the reservation list badge "Paid".
 - [ ] **Step 2: Run** `cd frontend && npx playwright test` with the full stack running — pass.
 - [ ] **Step 3: Commit** `test(e2e): paid ride happy path`.
