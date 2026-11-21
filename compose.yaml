@@ -21,6 +21,8 @@ services:
       - rails_tmp:/rails/tmp
     ports:
       - 3000:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - db
       - redis
@@ -34,6 +36,12 @@ services:
       REDIS_URL: redis://redis:6379/0
       RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
       REDIS_PORT: 6379
+      HYPERSWITCH_URL: http://host.docker.internal:8080
+      HYPERSWITCH_API_KEY:
+      HYPERSWITCH_PROFILE_ID:
+      HYPERSWITCH_PUBLISHABLE_KEY:
+      HYPERSWITCH_WEBHOOK_SECRET:
+      OSRM_URL:
 
   sidekiq:
     build: .
@@ -52,6 +60,14 @@ services:
       REDIS_URL: redis://redis:6379/0
       REDIS_PORT: 6379
       RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      HYPERSWITCH_URL: http://host.docker.internal:8080
+      HYPERSWITCH_API_KEY:
+      HYPERSWITCH_PROFILE_ID:
+      HYPERSWITCH_PUBLISHABLE_KEY:
+      HYPERSWITCH_WEBHOOK_SECRET:
+      OSRM_URL:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - db
       - redis
