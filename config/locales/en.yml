@@ -120,6 +120,67 @@ en:
     not_found:
       detail: "User not found"
 
+  city:
+    index:
+      success:
+        message: "Cities fetched successfully"
+    show:
+      success:
+        message: "City fetched successfully"
+    not_found:
+      detail: "City not found"
+
+  stop:
+    index:
+      success:
+        message: "Stops fetched successfully"
+    show:
+      success:
+        message: "Stop fetched successfully"
+    create:
+      success:
+        message: "Stop created successfully"
+      failure:
+        detail: "Failed to create stop: %{message}"
+    update:
+      success:
+        message: "Stop updated successfully"
+      failure:
+        detail: "Failed to update stop: %{message}"
+    destroy:
+      success:
+        message: "Stop deleted successfully"
+      failure:
+        detail: "This stop is used by a schedule, so it cannot be deleted"
+    not_found:
+      detail: "Stop not found"
+
+  stop_distance:
+    index:
+      success:
+        message: "Distances fetched successfully"
+    update:
+      success:
+        message: "Distance updated successfully"
+      failure:
+        detail: "Failed to update distance: %{message}"
+    not_found:
+      detail: "Distance not found"
+    override_km_required:
+      detail: "override_km is required; send null to clear the override"
+    override_km_invalid:
+      detail: "override_km must be a number of kilometres"
+
+  fare_table:
+    index:
+      success:
+        message: "Fare tables fetched successfully"
+    show:
+      success:
+        message: "Fare table fetched successfully"
+    not_found:
+      detail: "Fare table not found"
+
   schedule:
     index:
       success:

@@ -12,6 +12,7 @@ import {
   Shield,
   User,
   Plus,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ROLES } from "@/lib/auth";
@@ -34,6 +35,7 @@ const MENU_ITEMS: Record<string, ISidebarItem[]> = {
     { label: "Buses", href: "/admin/buses", icon: Bus },
     { label: "Schedules", href: "/admin/schedules", icon: CalendarDays },
     { label: "Reservations", href: "/admin/reservations", icon: Ticket },
+    { label: "Routing", href: "/admin/routing", icon: MapPin },
   ],
   [ROLES.GUEST]: [
     { label: "Dashboard", href: "/super-admin", icon: Home },

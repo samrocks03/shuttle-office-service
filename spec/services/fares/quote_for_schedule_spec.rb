@@ -100,7 +100,8 @@ RSpec.describe Fares::QuoteForSchedule do
     end
 
     it 'is :no_distance when an override makes the effective distance negative' do
-      stop_distance.update!(override_km: -1)
+      # update_column skips the model validation: the quote guard is defence against bad data.
+      stop_distance.update_column(:override_km, -1)
 
       expect(service.call).to be_nil
       expect(service.reason).to eq(:no_distance)
