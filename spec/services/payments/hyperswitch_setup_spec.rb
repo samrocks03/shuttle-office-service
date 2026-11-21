@@ -222,6 +222,97 @@ RSpec.describe Payments::HyperswitchSetup do
       end
     end
 
+    context 'when a processor key is absent but its connector already exists on the profile' do
+      it 'keeps that connector and keeps it in the routing order' do
+        first = build_setup.call
+        mca = hyperswitch.connectors.to_h { |c| [c[:connector_name], c[:merchant_connector_id]] }
+        razorpay_before = hyperswitch.connectors.find { |c| c[:connector_name] == 'razorpay' }.dup
+
+        rerun = described_class.new(base_url: base_url, admin_api_key: 'admin_SECRETADMIN', merchant_id: merchant_id,
+                                    keys: { stripe_secret: keys[:stripe_secret] },
+                                    existing_api_key: first[:env]['HYPERSWITCH_API_KEY'], out: out)
+        result = rerun.call
+
+        expect(result[:connector_ids].keys).to eq(%w[stripe stripe_test razorpay])
+        order = hyperswitch.routes.last[:algorithm][:data].map { |c| c['merchant_connector_id'] }
+        expect(order).to eq([mca['stripe'], mca['stripe_test'], mca['razorpay']])
+        expect(hyperswitch.routes.size).to eq(1)
+        expect(hyperswitch.connectors.find { |c| c[:connector_name] == 'razorpay' }).to eq(razorpay_before)
+        expect(out.string).to include('razorpay: found, kept')
+      end
+
+      it 'routes the kept stripe connector first when only razorpay keys are given' do
+        first = build_setup.call
+        mca = hyperswitch.connectors.to_h { |c| [c[:connector_name], c[:merchant_connector_id]] }
+
+        described_class.new(base_url: base_url, admin_api_key: 'admin_SECRETADMIN', merchant_id: merchant_id,
+                            keys: keys.except(:stripe_secret),
+                            existing_api_key: first[:env]['HYPERSWITCH_API_KEY'], out: out).call
+
+        order = hyperswitch.routes.last[:algorithm][:data].map { |c| c['merchant_connector_id'] }
+        expect(order).to eq([mca['stripe'], mca['stripe_test'], mca['razorpay']])
+      end
+    end
+
+    describe 'test keys only' do
+      it 'refuses a Stripe key that is not sk_test_, naming the variable but not the value' do
+        live_like = 'rk_live_NOTATESTKEY123'
+        setup = described_class.new(base_url: base_url, admin_api_key: 'admin_SECRETADMIN', merchant_id: merchant_id,
+                                    keys: keys.merge(stripe_secret: live_like), out: out)
+
+        expect { setup.call }.to raise_error(Payments::HyperswitchSetup::Error) do |error|
+          expect(error.message).to include('STRIPE_TEST_SECRET_KEY').and include('sk_test_')
+          expect(error.message).not_to include(live_like)
+        end
+        expect(hyperswitch.requests).to be_empty
+      end
+
+      it 'refuses a Razorpay key id that is not rzp_test_, naming the variable but not the value' do
+        live_like = 'rzp_live_NOTATESTKEY'
+        setup = described_class.new(base_url: base_url, admin_api_key: 'admin_SECRETADMIN', merchant_id: merchant_id,
+                                    keys: keys.merge(razorpay_key_id: live_like), out: out)
+
+        expect { setup.call }.to raise_error(Payments::HyperswitchSetup::Error) do |error|
+          expect(error.message).to include('RAZORPAY_TEST_KEY_ID').and include('rzp_test_')
+          expect(error.message).not_to include(live_like)
+        end
+        expect(hyperswitch.requests).to be_empty
+      end
+    end
+
+    describe 'blank values for .env' do
+      def stub_route(path_to_override, response)
+        allow(hyperswitch).to receive(:route).and_wrap_original do |original, verb, path, *rest|
+          path == path_to_override ? response : original.call(verb, path, *rest)
+        end
+      end
+
+      it 'raises, naming the value, when the merchant has no publishable key' do
+        stub_route("/accounts/#{merchant_id}", [200, { publishable_key: '' }])
+
+        expect { build_setup.call }.to raise_error(Payments::HyperswitchSetup::Error, /HYPERSWITCH_PUBLISHABLE_KEY/)
+      end
+
+      it 'raises when the profile has no webhook signing secret' do
+        allow(hyperswitch).to receive(:update_profile).and_wrap_original do |original, *args|
+          status, profile = original.call(*args)
+          [status, profile.merge(payment_response_hash_key: nil)]
+        end
+
+        expect { build_setup.call }.to raise_error(Payments::HyperswitchSetup::Error, /HYPERSWITCH_WEBHOOK_SECRET/)
+      end
+
+      it 'raises and hands over nothing when Hyperswitch returns a blank API key' do
+        stub_route("/api_keys/#{merchant_id}", [200, { api_key: '' }])
+        saved = []
+        setup = described_class.new(base_url: base_url, admin_api_key: 'admin_SECRETADMIN', merchant_id: merchant_id,
+                                    keys: keys, on_api_key: ->(key) { saved << key }, out: out)
+
+        expect { setup.call }.to raise_error(Payments::HyperswitchSetup::Error, /HYPERSWITCH_API_KEY/)
+        expect(saved).to be_empty
+      end
+    end
+
     it 'puts none of the secret values in its output' do
       result = build_setup.call
       build_setup(existing_api_key: result[:env]['HYPERSWITCH_API_KEY']).call

@@ -38,4 +38,12 @@ RSpec.describe Payments::EnvFile do
     expect(described_class.new(path).read).to eq('A' => '1', 'B' => 'two')
     expect(described_class.new(File.join(dir, 'none')).read).to eq({})
   end
+
+  it 'refuses a blank value, names the key and writes nothing' do
+    File.write(path, "HYPERSWITCH_API_KEY=old\n")
+
+    expect { described_class.new(path).merge!('HYPERSWITCH_API_KEY' => 'new', 'HYPERSWITCH_PROFILE_ID' => ' ') }
+      .to raise_error(described_class::BlankValue, /HYPERSWITCH_PROFILE_ID/)
+    expect(File.read(path)).to eq("HYPERSWITCH_API_KEY=old\n")
+  end
 end

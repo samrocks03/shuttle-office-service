@@ -4,6 +4,8 @@ module Payments
   # Reads and merge-updates a dotenv-style file. Only the keys it is given change; every other line,
   # comment and blank line stays as it is. The file is left with mode 600.
   class EnvFile
+    class BlankValue < ArgumentError; end
+
     LINE = /\A\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)\z/
 
     def initialize(path)
@@ -19,8 +21,12 @@ module Payments
       end
     end
 
-    # Returns the names of the keys it wrote, never the values.
+    # Returns the names of the keys it wrote, never the values. Raises BlankValue (naming the keys)
+    # and writes nothing when any value is blank.
     def merge!(values)
+      blank = values.select { |_name, value| value.to_s.strip.empty? }.keys
+      raise BlankValue, "refusing to write blank #{blank.join(', ')} to #{File.basename(@path)}" if blank.any?
+
       lines = File.exist?(@path) ? File.readlines(@path, chomp: true) : []
       pending = values.transform_keys(&:to_s)
 

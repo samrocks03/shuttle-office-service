@@ -72,8 +72,11 @@ module Payments
     end
 
     def call
+      check_test_keys!
       merchant = must(request(:get, "/accounts/#{@merchant_id}", @admin_api_key), 'Read merchant')
       api_key = ensure_api_key
+      raise Error, 'Hyperswitch returned no HYPERSWITCH_API_KEY; nothing was written' if blank?(api_key)
+
       @on_api_key&.call(api_key)
       profile_id = ensure_profile(api_key)
       webhook_secret = configure_profile(profile_id, api_key)
@@ -81,20 +84,40 @@ module Payments
       routing_id = ensure_routing(profile_id, api_key, connector_ids)
       ensure_bins
 
-      {
-        profile_id: profile_id,
-        connector_ids: connector_ids,
-        routing_id: routing_id,
-        env: {
-          'HYPERSWITCH_PROFILE_ID' => profile_id,
-          'HYPERSWITCH_API_KEY' => api_key,
-          'HYPERSWITCH_PUBLISHABLE_KEY' => merchant['publishable_key'],
-          'HYPERSWITCH_WEBHOOK_SECRET' => webhook_secret
-        }
+      env = {
+        'HYPERSWITCH_PROFILE_ID' => profile_id,
+        'HYPERSWITCH_API_KEY' => api_key,
+        'HYPERSWITCH_PUBLISHABLE_KEY' => merchant['publishable_key'],
+        'HYPERSWITCH_WEBHOOK_SECRET' => webhook_secret
       }
+      check_env!(env)
+      { profile_id: profile_id, connector_ids: connector_ids, routing_id: routing_id, env: env }
     end
 
     private
+
+    # Only processor test keys may be used here. The message names the variable, never the value.
+    def check_test_keys!
+      if !stripe_secret.empty? && !stripe_secret.start_with?('sk_test_')
+        raise Error, 'STRIPE_TEST_SECRET_KEY is not a Stripe test secret key (it must start with sk_test_)'
+      end
+      razorpay_id = @keys[:razorpay_key_id].to_s
+      return if razorpay_id.empty? || razorpay_id.start_with?('rzp_test_')
+
+      raise Error, 'RAZORPAY_TEST_KEY_ID is not a Razorpay test key id (it must start with rzp_test_)'
+    end
+
+    # Every value meant for .env must be present; otherwise nothing is written.
+    def check_env!(env)
+      missing = env.select { |_name, value| blank?(value) }.keys
+      return if missing.empty?
+
+      raise Error, "Hyperswitch returned no #{missing.join(', ')}; nothing was written to .env"
+    end
+
+    def blank?(value)
+      value.to_s.strip.empty?
+    end
 
     def say(message)
       @out.puts "  #{message}"
@@ -149,17 +172,25 @@ module Payments
 
     # ---- connectors ---------------------------------------------------------------------------
 
+    # Returns { name => merchant_connector_id } for every connector present on the profile, in
+    # routing order. A connector whose key is not given this run is kept as it is when it already
+    # exists (a run without RAZORPAY_* must not drop razorpay from routing), and skipped otherwise.
     def ensure_connectors(profile_id, api_key)
       existing = must(request(:get, "/account/#{@merchant_id}/connectors", api_key), 'List connectors')
       ids = {}
       wanted_connectors.each do |name, spec|
+        found = existing.find { |c| c['connector_name'] == name && c['profile_id'] == profile_id }
         if spec.nil?
-          say "processor #{name}: skipped, #{skip_reason(name)}"
+          if found
+            ids[name] = found['merchant_connector_id']
+            say "processor #{name}: found, kept as it is (#{skip_reason(name)})"
+          else
+            say "processor #{name}: skipped, #{skip_reason(name)}"
+          end
           next
         end
 
         body = connector_body(spec)
-        found = existing.find { |c| c['connector_name'] == name && c['profile_id'] == profile_id }
         if found
           must(request(:post, "/account/#{@merchant_id}/connectors/#{found['merchant_connector_id']}", api_key, body),
                "Update #{name}")
@@ -235,7 +266,7 @@ module Payments
 
     # ---- routing ------------------------------------------------------------------------------
 
-    # One priority rule: stripe, then stripe_test, then razorpay (only those that are connected).
+    # One priority rule: stripe, then stripe_test, then razorpay (those present on the profile).
     # Hyperswitch skips a connector that does not support the payment method, so cards go to the
     # Stripe ones and UPI goes to razorpay.
     def ensure_routing(profile_id, api_key, connector_ids)

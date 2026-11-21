@@ -29,11 +29,11 @@ namespace :payments do
           razorpay_key_secret: setting.call('RAZORPAY_TEST_KEY_SECRET')
         }
       ).call
-    rescue Payments::HyperswitchSetup::Error, SystemCallError => e
+      written = env_file.merge!(result[:env].merge('HYPERSWITCH_URL' => base_url))
+    rescue Payments::HyperswitchSetup::Error, Payments::EnvFile::BlankValue, SystemCallError => e
       abort "Hyperswitch setup failed: #{e.message}"
     end
 
-    written = env_file.merge!(result[:env].merge('HYPERSWITCH_URL' => base_url))
     puts "Wrote #{written.join(', ')} to .env"
   end
 
