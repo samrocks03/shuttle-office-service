@@ -3,6 +3,7 @@
 class Company < ApplicationRecord
   include UidGenerator
 
+  belongs_to :city, optional: true, inverse_of: :companies
   has_many :users, dependent: :destroy, inverse_of: :company
   has_many :buses, dependent: :destroy, inverse_of: :company
 

@@ -4,6 +4,8 @@ class Schedule < ApplicationRecord
   include UidGenerator
 
   belongs_to :bus, inverse_of: :schedules
+  belongs_to :from_stop, class_name: 'Stop', optional: true
+  belongs_to :to_stop, class_name: 'Stop', optional: true
   has_many :reservations, dependent: :destroy, inverse_of: :schedule
 
   validates :start_point, :arrival_time, :departure_time, presence: true
@@ -26,6 +28,16 @@ class Schedule < ApplicationRecord
                 .update_all('available_seats = available_seats + 1')
     reload
     rows.positive?
+  end
+
+  def city
+    bus&.company&.city
+  end
+
+  def stop_distance
+    return unless from_stop_id && to_stop_id
+
+    StopDistance.between(from_stop, to_stop)
   end
 
   private
