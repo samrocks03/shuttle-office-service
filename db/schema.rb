@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_11_21_000006) do
+ActiveRecord::Schema[7.0].define(version: 2026_11_21_000008) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -83,13 +83,67 @@ ActiveRecord::Schema[7.0].define(version: 2026_11_21_000006) do
     t.index ["uid"], name: "index_fare_tables_on_uid", unique: true
   end
 
+  create_table "payment_webhook_events", force: :cascade do |t|
+    t.uuid "uid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "gateway", null: false
+    t.string "event_id", null: false
+    t.string "event_type", null: false
+    t.string "gateway_payment_id"
+    t.datetime "received_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_payment_webhook_events_on_event_id", unique: true
+    t.index ["uid"], name: "index_payment_webhook_events_on_uid", unique: true
+  end
+
+  create_table "payments", force: :cascade do |t|
+    t.uuid "uid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "reservation_id", null: false
+    t.string "gateway", default: "hyperswitch", null: false
+    t.string "gateway_payment_id", null: false
+    t.string "status", null: false
+    t.integer "amount_minor", null: false
+    t.string "currency", null: false
+    t.string "connector"
+    t.text "last_error"
+    t.jsonb "raw", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gateway_payment_id"], name: "index_payments_on_gateway_payment_id", unique: true
+    t.index ["reservation_id", "status"], name: "index_payments_on_reservation_id_and_status"
+    t.index ["reservation_id"], name: "index_payments_on_reservation_id"
+    t.index ["uid"], name: "index_payments_on_uid", unique: true
+  end
+
+  create_table "refunds", force: :cascade do |t|
+    t.uuid "uid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "payment_id", null: false
+    t.string "gateway_refund_id", null: false
+    t.integer "amount_minor", null: false
+    t.string "status", default: "pending", null: false
+    t.string "reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gateway_refund_id"], name: "index_refunds_on_gateway_refund_id", unique: true
+    t.index ["payment_id"], name: "index_refunds_on_payment_id"
+    t.index ["uid"], name: "index_refunds_on_uid", unique: true
+  end
+
   create_table "reservations", force: :cascade do |t|
     t.bigint "schedule_id", null: false
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.uuid "uid", default: -> { "gen_random_uuid()" }, null: false
-    t.index ["schedule_id", "user_id"], name: "index_reservations_on_schedule_and_user", unique: true
+    t.string "status", default: "confirmed", null: false
+    t.integer "fare_amount_minor"
+    t.string "currency"
+    t.jsonb "fare_breakdown"
+    t.datetime "hold_expires_at"
+    t.datetime "cancelled_at"
+    t.bigint "fare_table_id"
+    t.index ["fare_table_id"], name: "index_reservations_on_fare_table_id"
+    t.index ["schedule_id", "user_id"], name: "index_reservations_on_schedule_and_user", unique: true, where: "((status)::text = ANY ((ARRAY['pending_payment'::character varying, 'confirmed'::character varying])::text[]))"
     t.index ["schedule_id"], name: "index_reservations_on_schedule_id"
     t.index ["uid"], name: "index_reservations_on_uid", unique: true
     t.index ["user_id"], name: "index_reservations_on_user_id"
@@ -187,6 +241,9 @@ ActiveRecord::Schema[7.0].define(version: 2026_11_21_000006) do
   add_foreign_key "companies", "cities"
   add_foreign_key "fare_slabs", "fare_tables"
   add_foreign_key "fare_tables", "cities"
+  add_foreign_key "payments", "reservations"
+  add_foreign_key "refunds", "payments"
+  add_foreign_key "reservations", "fare_tables"
   add_foreign_key "reservations", "schedules"
   add_foreign_key "reservations", "users"
   add_foreign_key "schedules", "buses"
