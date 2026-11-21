@@ -75,6 +75,7 @@ group :development, :test do
   gem 'rswag-ui'
   gem 'shoulda-matchers'
   gem 'simplecov'
+  gem 'webmock'
 end
 
 group :development do
