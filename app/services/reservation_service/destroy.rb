@@ -2,8 +2,10 @@
 
 module ReservationService
   # Cancels a booking. A free reservation is deleted as before. A paid one is never deleted (its
-  # payment record must stay): it moves to cancelled, open payments are cancelled and a confirmed
-  # one is refunded in full. Gateway calls run outside any DB transaction.
+  # payment record must stay): it moves to cancelled, open payments are cancelled and every
+  # succeeded payment of a confirmed one is refunded in full. Gateway calls run outside any DB
+  # transaction, except the refund call, which holds that payment's row lock (as in
+  # Payments::ApplyStatus) so the two cannot both refund the same payment.
   class Destroy < Base
     attr_reader :params, :current_user, :reservation
     SUCCESS_KEY = 'reservation.destroy.success.message'
@@ -95,8 +97,8 @@ module ReservationService
       return add_error('reservation.cancel_too_late') if reservation.schedule.departs_at <= Time.current
       return add_error('reservation.not_cancellable') unless transition_to_cancelled(from: :confirmed)
 
-      payment = reservation.succeeded_payment
-      refund(payment) if payment
+      # Normally one payment; more than one succeeded payment means a double charge, refund them all.
+      reservation.payments.where(status: 'succeeded').order(:id).each { |payment| refund(payment) }
       true
     end
 
@@ -104,28 +106,42 @@ module ReservationService
       Reservations::Transition.call(reservation, to: :cancelled, from: from, reason: 'cancelled_by_rider')
     end
 
-    # A refused cancel does not stop the cancellation; the error is kept on the payment.
+    # A refused cancel does not stop the cancellation; the error is kept on the payment. The
+    # reported status goes through Payments::ApplyStatus, so a payment the gateway reports as
+    # succeeded is recorded and refunded as a late success.
     def cancel_payment(payment)
       result = gateway_call { |gateway| gateway.cancel_payment(payment.gateway_payment_id) }
       if result.success?
-        payment.update!(status: result.data[:status].presence || 'cancelled', last_error: nil)
+        Payments::ApplyStatus.new(payment, result.data).call if result.data[:status].present?
       else
         payment.update!(last_error: result.error)
+        Rails.logger.warn "[ReservationService::Destroy] could not cancel payment #{payment.gateway_payment_id}"
       end
     end
 
     # A refused refund keeps the reservation cancelled and is stored as failed for an admin retry.
+    # Skipped when the payment already has a refund (for example a late-success refund).
     def refund(payment)
-      result = gateway_call do |gateway|
-        gateway.create_refund(payment_id: payment.gateway_payment_id, amount_minor: payment.amount_minor,
-                              reason: CANCEL_REASON)
+      payment.with_lock do
+        next if payment.refunds.exists?
+
+        result = gateway_call do |gateway|
+          gateway.create_refund(payment_id: payment.gateway_payment_id, amount_minor: payment.amount_minor,
+                                reason: CANCEL_REASON)
+        end
+        store_refund(payment, result)
       end
+    end
+
+    def store_refund(payment, result)
       attributes = { amount_minor: payment.amount_minor, reason: CANCEL_REASON }
       if result.success?
         payment.refunds.create!(attributes.merge(gateway_refund_id: result.data[:id],
                                                  status: result.data[:status].presence || 'pending'))
       else
         payment.refunds.create!(attributes.merge(status: 'failed', last_error: result.error))
+        Rails.logger.error "[ReservationService::Destroy] refund FAILED for payment #{payment.gateway_payment_id} " \
+                           "(reservation #{reservation.uid}); stored as failed"
       end
     end
 

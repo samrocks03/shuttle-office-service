@@ -77,10 +77,15 @@ RSpec.describe Payments::ApplyStatus do
       it 'stores a refused refund as failed with the gateway error' do
         gateway.fail_refund = true
 
+        allow(Rails.logger).to receive(:info)
+        allow(Rails.logger).to receive(:error)
+
         expect(apply('succeeded')).to eq(:refunded_late)
         expect(payment.refunds.sole).to have_attributes(
           gateway_refund_id: nil, status: 'failed', reason: 'late_success', last_error: 'refund rejected by connector'
         )
+        expect(Rails.logger).to have_received(:error).with(/late_success refund FAILED for payment pay_abc/)
+        expect(Rails.logger).not_to have_received(:info).with(/refund requested/)
       end
     end
 
@@ -99,6 +104,45 @@ RSpec.describe Payments::ApplyStatus do
 
       expect(apply('succeeded', target: Payment.find(payment.id))).to eq(:unchanged)
       expect(gateway.calls[:create_refund]).to be_empty
+    end
+  end
+
+  describe 'a second payment succeeding for an already-confirmed reservation' do
+    let(:second) do
+      create(:payment, reservation: reservation, gateway_payment_id: 'pay_second', amount_minor: 3500,
+                       status: 'processing')
+    end
+
+    before { apply('succeeded') }
+
+    it 'refunds the second payment in full once with reason duplicate_payment' do
+      result = nil
+      expect { result = apply('succeeded', target: second) }.not_to have_enqueued_job(ReservationConfirmationJob)
+
+      expect(result).to eq(:refunded_duplicate)
+      expect(gateway.calls[:create_refund]).to eq([{ payment_id: 'pay_second', amount_minor: 3500,
+                                                     reason: 'duplicate_payment' }])
+      expect(second.refunds.sole).to have_attributes(reason: 'duplicate_payment', amount_minor: 3500)
+      expect(payment.refunds).to be_empty
+      expect(reservation.reload).to be_confirmed
+    end
+
+    it 'does not refund the duplicate twice' do
+      apply('succeeded', target: second)
+
+      expect(apply('succeeded', target: Payment.find(second.id))).to eq(:unchanged)
+      expect(gateway.calls[:create_refund].size).to eq(1)
+    end
+
+    it 'logs a refused duplicate refund as an error, with ids only' do
+      gateway.fail_refund = true
+      allow(Rails.logger).to receive(:error)
+
+      expect(apply('succeeded', target: second)).to eq(:refunded_duplicate)
+
+      expect(second.refunds.sole).to have_attributes(status: 'failed', reason: 'duplicate_payment')
+      expect(Rails.logger).to have_received(:error).with(/duplicate_payment refund FAILED for payment pay_second/)
+      expect(Rails.logger).not_to have_received(:error).with(/rejected by connector/)
     end
   end
 

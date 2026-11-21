@@ -3,14 +3,15 @@
 module Payments
   # Applies a payment status reported by the gateway (webhook, status sync or expiry job) to our
   # records. gateway_data is the gateway contract's payment data { id:, status:, connector:, error: },
-  # or { id:, refund_id:, status: } for a refund. Returns :confirmed, :refunded_late, :failed or
-  # :unchanged. Safe to call more than once with the same data.
+  # or { id:, refund_id:, status: } for a refund. Returns :confirmed, :refunded_late,
+  # :refunded_duplicate, :failed or :unchanged. Safe to call more than once with the same data.
   #
   # Runs under row locks on the reservation, then the payment (parent before child, so it cannot
   # deadlock with Reservations::Transition), so two applications of the same success cannot both
   # confirm or both refund.
   class ApplyStatus
     LATE_SUCCESS_REASON = 'late_success'
+    DUPLICATE_REASON = 'duplicate_payment'
     LATE_STATES = %w[expired cancelled].freeze
     PAYMENT_FINAL = %w[succeeded failed cancelled].freeze
     REFUND_FINAL = %w[succeeded failed].freeze
@@ -69,26 +70,37 @@ module Payments
       end
       # A payment that was already succeeded was handled when it first succeeded: it either
       # confirmed the reservation (whose cancel refunds it) or was refunded then.
-      return :unchanged if already_succeeded || !LATE_STATES.include?(reservation.status)
-      return :unchanged if @payment.refunds.exists?
+      return :unchanged if already_succeeded || @payment.refunds.exists?
+      return refund(DUPLICATE_REASON, :refunded_duplicate) if duplicate?(reservation)
+      return :unchanged unless LATE_STATES.include?(reservation.status)
 
-      refund_late
+      refund(LATE_SUCCESS_REASON, :refunded_late)
+    end
+
+    # A second payment that succeeds for a reservation another payment already confirmed is a
+    # double charge.
+    def duplicate?(reservation)
+      reservation.confirmed? &&
+        reservation.payments.where(status: 'succeeded').where.not(id: @payment.id).exists?
     end
 
     # The gateway call runs under the payment lock on purpose: it is the only guard against a
     # second concurrent refund. A refused refund is stored as failed for an admin retry.
-    def refund_late
+    def refund(reason, outcome)
       result = Gateway.current.create_refund(payment_id: @payment.gateway_payment_id,
-                                             amount_minor: @payment.amount_minor, reason: LATE_SUCCESS_REASON)
-      attributes = { amount_minor: @payment.amount_minor, reason: LATE_SUCCESS_REASON }
+                                             amount_minor: @payment.amount_minor, reason: reason)
+      attributes = { amount_minor: @payment.amount_minor, reason: reason }
       if result.success?
         @payment.refunds.create!(attributes.merge(gateway_refund_id: result.data[:id],
                                                   status: result.data[:status].presence || 'pending'))
+        Rails.logger.info "[Payments::ApplyStatus] #{reason} refund requested for payment " \
+                          "#{@payment.gateway_payment_id}"
       else
         @payment.refunds.create!(attributes.merge(status: 'failed', last_error: result.error))
+        Rails.logger.error "[Payments::ApplyStatus] #{reason} refund FAILED for payment " \
+                           "#{@payment.gateway_payment_id} (reservation #{@payment.reservation.uid}); stored as failed"
       end
-      Rails.logger.info "[Payments::ApplyStatus] late success refunded for payment #{@payment.gateway_payment_id}"
-      :refunded_late
+      outcome
     end
 
     def apply_refund

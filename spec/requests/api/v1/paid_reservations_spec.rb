@@ -165,6 +165,19 @@ RSpec.describe 'Api::V1::Reservations (paid)', type: :request do
                                                              last_error: 'cancel rejected by connector')
         expect(response.body).not_to include('cancel rejected by connector')
       end
+
+      it 'refunds a payment the cancel response reports as succeeded, through ApplyStatus' do
+        allow(gateway).to receive(:cancel_payment)
+          .and_return(Payments::Result.new(success: true, data: { id: 'pay_held', status: 'succeeded' }))
+
+        cancel(reservation)
+
+        expect(response).to have_http_status(:ok)
+        expect(reservation.reload).to be_cancelled
+        expect(reservation.payments.sole.status).to eq('succeeded')
+        expect(Refund.sole).to have_attributes(reason: 'late_success', amount_minor: 3500)
+        expect(schedule.reload.available_seats).to eq(40)
+      end
     end
 
     context 'when the reservation is confirmed and paid' do
@@ -200,6 +213,39 @@ RSpec.describe 'Api::V1::Reservations (paid)', type: :request do
         expect(Refund.sole).to have_attributes(status: 'failed', amount_minor: 3500,
                                                last_error: 'refund rejected by connector')
         expect(response.body).not_to include('refund rejected by connector')
+      end
+
+      it 'logs a failed refund as an error, with ids only' do
+        gateway.fail_refund = true
+        allow(Rails.logger).to receive(:error)
+
+        cancel(reservation)
+
+        expect(Rails.logger).to have_received(:error).with(/refund FAILED for payment pay_held/)
+        expect(Rails.logger).not_to have_received(:error).with(/rejected by connector/)
+      end
+
+      it 'refunds every succeeded payment when the rider was charged twice' do
+        create(:payment, reservation: reservation, gateway_payment_id: 'pay_double', status: 'succeeded',
+                         amount_minor: 3500)
+
+        cancel(reservation)
+
+        expect(response).to have_http_status(:ok)
+        expect(gateway.calls[:create_refund].pluck(:payment_id)).to contain_exactly('pay_held', 'pay_double')
+        expect(Refund.count).to eq(2)
+      end
+
+      it 'does not refund a payment that already has a refund' do
+        double = create(:payment, reservation: reservation, gateway_payment_id: 'pay_double', status: 'succeeded',
+                                  amount_minor: 3500)
+        double.refunds.create!(gateway_refund_id: 'ref_dup', amount_minor: 3500, status: 'pending',
+                               reason: 'duplicate_payment')
+
+        cancel(reservation)
+
+        expect(gateway.calls[:create_refund].pluck(:payment_id)).to eq(['pay_held'])
+        expect(Refund.count).to eq(2)
       end
 
       it 'refuses after departure, without a refund' do
