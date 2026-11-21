@@ -8,7 +8,7 @@ class ReservationRepository
   end
 
   def self.index(scope: Reservation.all, search: nil, sort_by: 'created_at', sort_order: 'desc')
-    scope = scope.includes(:user, schedule: { bus: :company })
+    scope = scope.includes(:user, { schedule: { bus: :company } }, payments: :refunds)
     if search.present?
       scope = scope.joins(:user, schedule: { bus: :company })
                    .where(
@@ -28,7 +28,7 @@ class ReservationRepository
   end
 
   def self.for_user(user_id)
-    Reservation.includes(:user, schedule: { bus: :company })
+    Reservation.includes(:user, { schedule: { bus: :company } }, payments: :refunds)
                .where(user_id: user_id)
                .order(created_at: :desc)
   end

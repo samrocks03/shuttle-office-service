@@ -19,6 +19,13 @@ module V1
       }
     end
 
+    # The latest refund across the reservation's payments, or nil. A failed refund waits for an
+    # admin retry, so riders and admins both need to see it.
+    attribute :refund do |reservation|
+      latest = reservation.payments.flat_map(&:refunds).max_by { |refund| [refund.created_at, refund.id] }
+      latest && { status: latest.status, amount_minor: latest.amount_minor, reason: latest.reason }
+    end
+
     attribute :user do |reservation|
       {
         uid: reservation.user&.uid,

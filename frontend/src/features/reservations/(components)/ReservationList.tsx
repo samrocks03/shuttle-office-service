@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Clock, Building2, X, ChevronLeft, ChevronRight, Ticket, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatMoney } from "@/shared/lib/money";
 import { formatFare, minutesLeft, useNow } from "@/features/payments/(components)/format";
 import { useReservations, useCancelReservation, bffErrorMessage } from "../(queries)/queries";
 
@@ -24,6 +25,25 @@ function StatusBadge({ status, paid }: { status: ReservationStatus; paid: boolea
       className={cn("rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider", badge.className)}
     >
       {label}
+    </span>
+  );
+}
+
+const REFUND_BADGES: Record<string, { label: string; className: string }> = {
+  pending: { label: "Refund pending", className: "text-amber-700" },
+  succeeded: { label: "Refunded", className: "text-accent-700" },
+  failed: { label: "Refund failed", className: "text-red-700" },
+};
+
+/** "Refund pending · Rs 35"; any other gateway status is shown as "Refund <status>". */
+function RefundNote({ refund, currency }: { refund: IReservationRefund; currency: string }) {
+  const badge = REFUND_BADGES[refund.status] ?? {
+    label: `Refund ${refund.status.replace(/_/g, " ")}`,
+    className: "text-on-surface-variant",
+  };
+  return (
+    <span data-testid="reservation-refund" className={cn("font-mono font-semibold", badge.className)}>
+      {badge.label} · {formatMoney(refund.amount_minor, currency)}
     </span>
   );
 }
@@ -77,6 +97,7 @@ function ReservationCard({ reservation, now }: { reservation: IReservationResour
             </span>
           )}
           {fare && <span className="font-mono font-semibold tabular-nums text-on-surface">{fare}</span>}
+          {a.refund && <RefundNote refund={a.refund} currency={a.fare?.currency ?? "INR"} />}
           {holdLeft > 0 && (
             <span className="font-mono text-amber-700" data-testid="hold-left">
               {holdLeft} min left to pay
@@ -86,7 +107,7 @@ function ReservationCard({ reservation, now }: { reservation: IReservationResour
         {cancel.isError && (
           <p className="mt-2 text-xs text-red-600">{bffErrorMessage(cancel.error)}</p>
         )}
-        {refundStarted && (
+        {refundStarted && a.refund?.status !== "failed" && (
           <p className="mt-2 text-xs text-on-surface-variant">Cancelled. Your fare will be refunded to the same payment method.</p>
         )}
       </div>

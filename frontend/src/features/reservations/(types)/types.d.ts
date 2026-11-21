@@ -22,6 +22,13 @@ interface IReservationFare {
   slab_label: string | null;
 }
 
+/** Latest refund across the reservation's payments. */
+interface IReservationRefund {
+  status: "pending" | "succeeded" | "failed" | (string & {});
+  amount_minor: number;
+  reason: string | null;
+}
+
 interface IReservationAttributes {
   uid: string;
   status: ReservationStatus;
@@ -29,6 +36,8 @@ interface IReservationAttributes {
   hold_expires_at: string | null;
   /** Fare snapshot for a paid booking; null for a free one. */
   fare: IReservationFare | null;
+  /** Latest refund, or null when nothing was refunded. */
+  refund: IReservationRefund | null;
   created_at: string;
   updated_at: string;
   user: IReservationUser;
