@@ -21,7 +21,7 @@ class Stop < ApplicationRecord
 
   def distance_inputs_changed?
     saved_change_to_id? || saved_change_to_latitude? || saved_change_to_longitude? ||
-      (saved_change_to_active? && active?)
+      saved_change_to_city_id? || saved_change_to_kind? || (saved_change_to_active? && active?)
   end
 
   def enqueue_distance_computation

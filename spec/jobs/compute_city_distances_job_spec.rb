@@ -22,6 +22,21 @@ RSpec.describe ComputeCityDistancesJob do
       expect { stop.update!(latitude: 18.6) }.to have_enqueued_job(described_class).with(city.id)
     end
 
+    it 'enqueues for the new city when a stop changes city' do
+      stop = create(:stop, city: city)
+      other_city = create(:city, distance_provider: 'haversine')
+      clear_enqueued_jobs
+
+      expect { stop.update!(city: other_city) }.to have_enqueued_job(described_class).with(other_city.id)
+    end
+
+    it 'enqueues when a stop changes kind' do
+      stop = create(:stop, city: city)
+      clear_enqueued_jobs
+
+      expect { stop.update!(kind: 'office') }.to have_enqueued_job(described_class).with(city.id)
+    end
+
     it 'enqueues when a stop becomes active' do
       stop = create(:stop, city: city, active: false)
       clear_enqueued_jobs
