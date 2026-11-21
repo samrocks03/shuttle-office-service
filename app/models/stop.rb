@@ -6,7 +6,7 @@ class Stop < ApplicationRecord
   KINDS = %w[pickup office].freeze
 
   belongs_to :city, inverse_of: :stops
-  belongs_to :company, optional: true
+  belongs_to :company, optional: true, inverse_of: :stops
 
   validates :name, :latitude, :longitude, presence: true
   validates :kind, inclusion: { in: KINDS }

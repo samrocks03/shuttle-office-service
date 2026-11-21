@@ -43,5 +43,24 @@ RSpec.describe 'Api::V1::Users', type: :request do
       delete "/api/v1/users/#{target_user.uid}.json", headers: headers
       expect(response).to have_http_status(:ok)
     end
+
+    it 'destroys a user who overrode a distance and keeps the override' do
+      distance = create(:stop_distance, override_km: 17.0, override_reason: 'shorter road', overridden_by: target_user)
+
+      delete "/api/v1/users/#{target_user.uid}.json", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      distance.reload
+      expect(distance.overridden_by_id).to be_nil
+      expect(distance.override_km).to eq(BigDecimal('17.0'))
+    end
+
+    it 'nullifies the override at the database level too' do
+      distance = create(:stop_distance, override_km: 17.0, overridden_by: target_user)
+
+      target_user.delete
+
+      expect(distance.reload.overridden_by_id).to be_nil
+    end
   end
 end

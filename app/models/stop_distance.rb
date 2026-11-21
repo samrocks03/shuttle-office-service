@@ -5,7 +5,7 @@ class StopDistance < ApplicationRecord
 
   belongs_to :from_stop, class_name: 'Stop'
   belongs_to :to_stop, class_name: 'Stop'
-  belongs_to :overridden_by, class_name: 'User', optional: true
+  belongs_to :overridden_by, class_name: 'User', optional: true, inverse_of: :overridden_stop_distances
 
   validates :to_stop_id, uniqueness: { scope: :from_stop_id }
 

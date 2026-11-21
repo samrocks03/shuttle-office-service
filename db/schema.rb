@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_11_21_000004) do
+ActiveRecord::Schema[7.0].define(version: 2026_11_21_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -163,7 +163,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_11_21_000004) do
   add_foreign_key "schedules", "stops", column: "to_stop_id"
   add_foreign_key "stop_distances", "stops", column: "from_stop_id"
   add_foreign_key "stop_distances", "stops", column: "to_stop_id"
-  add_foreign_key "stop_distances", "users", column: "overridden_by_id"
+  add_foreign_key "stop_distances", "users", column: "overridden_by_id", on_delete: :nullify
   add_foreign_key "stops", "cities"
   add_foreign_key "stops", "companies"
   add_foreign_key "users", "companies"
