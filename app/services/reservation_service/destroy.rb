@@ -21,7 +21,7 @@ module ReservationService
     private
 
     def find_reservation
-      @reservation = ReservationRepository.find_by_column(:uid, params[:id])
+      @reservation = ReservationRepository.scope_for(current_user).find_by(uid: params[:id])
       return true if reservation
 
       add_error('reservation.not_found')

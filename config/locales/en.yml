@@ -171,5 +171,7 @@ en:
         detail: "Failed to delete reservation"
     not_found:
       detail: "Reservation not found"
+    guest_forbidden:
+      detail: "Guests cannot book rides. Please sign in as an employee."
     no_seats:
       detail: "Cannot make reservation, no seats available"

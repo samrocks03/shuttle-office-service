@@ -36,7 +36,12 @@ class ApplicationController < ActionController::API
   end
 
   def current_user_params
-    { user_id: @current_user&.id, user_uid: @current_user&.uid }
+    {
+      user_id: @current_user&.id,
+      user_uid: @current_user&.uid,
+      admin: @current_user&.admin? || false,
+      guest: @current_user&.guest? || false
+    }
   end
 
   def encode_token(payload)
