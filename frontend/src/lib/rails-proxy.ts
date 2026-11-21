@@ -13,14 +13,19 @@ interface IProxyOptions {
   /** Query parameters to send upstream (only these; nothing is forwarded implicitly). */
   query?: Record<string, string | null | undefined>;
   body?: unknown;
+  /** What to return when the upstream body is not JSON (default `{}`). */
+  fallback?: unknown;
 }
 
 /**
  * Forwards one call to Rails with the JWT from the `token` cookie and returns Rails' status and
- * body as they are. A body that is not JSON (a proxy error page, say) becomes `{}` rather than a
- * thrown error.
+ * body as they are. A body that is not JSON (a proxy error page, say) becomes `fallback` (`{}` by
+ * default) rather than a thrown error.
  */
-export async function proxyToRails(path: string, { method = "GET", query, body }: IProxyOptions = {}) {
+export async function proxyToRails(
+  path: string,
+  { method = "GET", query, body, fallback = {} }: IProxyOptions = {},
+) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -40,6 +45,6 @@ export async function proxyToRails(path: string, { method = "GET", query, body }
     cache: "no-store",
   });
 
-  const data = await upstream.json().catch(() => ({}));
+  const data = await upstream.json().catch(() => fallback);
   return NextResponse.json(data, { status: upstream.status });
 }
