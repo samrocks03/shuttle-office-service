@@ -72,6 +72,17 @@ RSpec.describe Reservation do
     end
   end
 
+  describe '.active' do
+    it 'holds only pending_payment and confirmed reservations' do
+      confirmed = create(:reservation, status: 'confirmed')
+      pending = create(:reservation, status: 'pending_payment')
+      create(:reservation, status: 'expired')
+      create(:reservation, status: 'cancelled')
+
+      expect(described_class.active).to contain_exactly(confirmed, pending)
+    end
+  end
+
   describe '#open_payments and #succeeded_payment' do
     let(:reservation) { create(:reservation, status: 'pending_payment') }
 

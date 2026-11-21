@@ -92,6 +92,20 @@ RSpec.describe Fares::QuoteForSchedule do
       expect(service.reason).to eq(:no_distance)
     end
 
+    it 'is :no_distance when the effective distance is zero' do
+      stop_distance.update!(computed_km: 0)
+
+      expect(service.call).to be_nil
+      expect(service.reason).to eq(:no_distance)
+    end
+
+    it 'is :no_distance when an override makes the effective distance negative' do
+      stop_distance.update!(override_km: -1)
+
+      expect(service.call).to be_nil
+      expect(service.reason).to eq(:no_distance)
+    end
+
     it 'is :no_fare_table when no table is in force for the date and class' do
       schedule.update_columns(date: Date.new(2026, 11, 30))
 

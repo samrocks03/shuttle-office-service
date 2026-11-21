@@ -43,7 +43,7 @@ module ScheduleService
     def current_user_booked_schedule_ids
       return [] unless @current_user&.dig(:user_id)
 
-      Reservation.where(user_id: @current_user[:user_id]).pluck(:schedule_id)
+      Reservation.active.where(user_id: @current_user[:user_id]).pluck(:schedule_id)
     end
   end
 end

@@ -24,11 +24,11 @@ class UserSerializer < ActiveModel::Serializer
   end
 
   attribute :reservations_count, if: -> { instance_options[:include_reservations_count] } do
-    object.reservations.count
+    object.reservations.active.count
   end
 
   attribute :has_reservations, if: -> { instance_options[:include_has_reservations] } do
-    object.reservations.any?
+    object.reservations.active.any?
   end
 
   def attributes(*args)

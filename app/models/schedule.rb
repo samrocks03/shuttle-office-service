@@ -40,6 +40,12 @@ class Schedule < ApplicationRecord
     StopDistance.between(from_stop, to_stop)
   end
 
+  # Date and departure time as a moment in the city's time zone (the app zone when there is no city).
+  def departs_at
+    zone = ActiveSupport::TimeZone[city&.time_zone.to_s] || Time.zone
+    zone.local(date.year, date.month, date.day, departure_time.hour, departure_time.min, departure_time.sec)
+  end
+
   private
 
   def arr_dept_validation

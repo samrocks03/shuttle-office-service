@@ -23,6 +23,19 @@ RSpec.describe 'Api::V1::Schedules', type: :request do
       get '/api/v1/schedules.json', params: { bus_id: bus.id }, headers: headers
       expect(response).to have_http_status(:ok)
     end
+
+    it 'does not mark a schedule as booked by an expired or cancelled reservation' do
+      expired_on = create(:schedule, bus: bus)
+      active_on = create(:schedule, bus: bus)
+      create(:reservation, user: user, schedule: expired_on, status: 'expired')
+      create(:reservation, user: user, schedule: active_on, status: 'pending_payment')
+
+      get '/api/v1/schedules.json', params: { per_page: 100 }, headers: headers
+
+      booked = json_response['data'].to_h { |row| [row['attributes']['uid'], row['attributes']['booked_by_current_user']] }
+      expect(booked[expired_on.uid]).to be false
+      expect(booked[active_on.uid]).to be true
+    end
   end
 
   describe 'GET /api/v1/schedules/:id' do

@@ -177,3 +177,19 @@ en:
       detail: "Guests cannot book rides. Please sign in as an employee."
     no_seats:
       detail: "Cannot make reservation, no seats available"
+    not_priced:
+      detail: "This ride cannot be booked yet because its fare is not set: %{reason}."
+      reasons:
+        no_city: "the bus company has no city"
+        no_stops: "the ride has no pickup or drop stop"
+        no_distance: "the distance between its stops is not known"
+        no_fare_table: "there is no fare table for this bus type on this date"
+    payment_start_failed:
+      detail: "We could not start the payment, so your seat was not held. Please try again."
+    cancel:
+      success:
+        message: "Reservation cancelled"
+    cancel_too_late:
+      detail: "This ride has already departed, so it can no longer be cancelled."
+    not_cancellable:
+      detail: "This reservation is already cancelled or expired."

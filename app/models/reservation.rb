@@ -18,6 +18,8 @@ class Reservation < ApplicationRecord
   belongs_to :fare_table, optional: true
   has_many :payments, dependent: :restrict_with_exception, inverse_of: :reservation
 
+  scope :active, -> { where(status: ACTIVE_STATUSES) }
+
   validates :schedule_id, :user_id, presence: true
   # Mirrors the partial unique index: only active reservations block a re-booking.
   validates :schedule_id, uniqueness: {
@@ -28,6 +30,11 @@ class Reservation < ApplicationRecord
   # excluded: a free booking is created already confirmed and ReservationService::Create queues
   # its own email. after_commit also keeps the email from going out if an outer transaction rolls back.
   after_commit :enqueue_confirmation, on: :update, if: -> { saved_change_to_status? && confirmed? }
+
+  # A paid booking always carries a fare snapshot; a free one never does.
+  def paid?
+    fare_amount_minor.present?
+  end
 
   def open_payments
     payments.where(status: Payment::OPEN)

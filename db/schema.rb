@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_11_21_000008) do
+ActiveRecord::Schema[7.0].define(version: 2026_11_21_000009) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -118,12 +118,13 @@ ActiveRecord::Schema[7.0].define(version: 2026_11_21_000008) do
   create_table "refunds", force: :cascade do |t|
     t.uuid "uid", default: -> { "gen_random_uuid()" }, null: false
     t.bigint "payment_id", null: false
-    t.string "gateway_refund_id", null: false
+    t.string "gateway_refund_id"
     t.integer "amount_minor", null: false
     t.string "status", default: "pending", null: false
     t.string "reason"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "last_error"
     t.index ["gateway_refund_id"], name: "index_refunds_on_gateway_refund_id", unique: true
     t.index ["payment_id"], name: "index_refunds_on_payment_id"
     t.index ["uid"], name: "index_refunds_on_uid", unique: true
