@@ -130,6 +130,28 @@ RSpec.describe 'Api::V1::Schedules', type: :request do
       expect(json_response['data']['attributes']['bus_service_class']).to eq('ac')
     end
 
+    it 'reports payments_enabled false for a company whose city has payments off' do
+      get '/api/v1/schedules.json', params: { per_page: 100 }, headers: headers
+
+      expect(listed(priced)['payments_enabled']).to be(false)
+    end
+
+    it 'reports payments_enabled true for a company whose city has payments on' do
+      city.update!(payments_enabled: true)
+
+      get "/api/v1/schedules/#{priced.uid}.json", headers: headers
+
+      expect(json_response['data']['attributes']['payments_enabled']).to be(true)
+    end
+
+    it 'reports payments_enabled false for a company with no city' do
+      free = create(:schedule, bus: create(:bus, company: create(:company, city: nil)))
+
+      get "/api/v1/schedules/#{free.uid}.json", headers: headers
+
+      expect(json_response['data']['attributes']['payments_enabled']).to be(false)
+    end
+
     it 'lists a schedule without stops with a null fare and a reason' do
       unpriced = create(:schedule, bus: ac_bus, date: Date.new(2026, 12, 16))
 

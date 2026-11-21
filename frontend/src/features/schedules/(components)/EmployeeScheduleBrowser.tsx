@@ -126,7 +126,7 @@ function ScheduleRow({ schedule }: { schedule: IScheduleResource }) {
 
       {/* Right: fare + seats + action */}
       <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
-        <FareBadge fare={a.fare} serviceClass={a.bus_service_class} />
+        {a.payments_enabled && <FareBadge fare={a.fare} serviceClass={a.bus_service_class} />}
         <Seatsbadge available={a.available_seats} capacity={a.bus_capacity} />
         {a.available_seats > 0 ? (
           <ReserveButton scheduleId={Number(schedule.id)} alreadyBooked={a.booked_by_current_user} />
@@ -239,11 +239,13 @@ function RouteTimeline({ schedule }: { schedule: IScheduleResource | undefined }
         </div>
       </div>
 
-      {/* Fare */}
-      <div className="flex items-center justify-between rounded-xl bg-surface-container-low p-3">
-        <span className="font-mono text-[10px] font-bold uppercase text-on-surface-variant">Fare</span>
-        <FareBadge fare={a.fare} serviceClass={a.bus_service_class} />
-      </div>
+      {/* Fare (paid-ride companies only) */}
+      {a.payments_enabled && (
+        <div className="flex items-center justify-between rounded-xl bg-surface-container-low p-3">
+          <span className="font-mono text-[10px] font-bold uppercase text-on-surface-variant">Fare</span>
+          <FareBadge fare={a.fare} serviceClass={a.bus_service_class} />
+        </div>
+      )}
 
       {/* Seats remaining */}
       <div className="flex items-center justify-between rounded-xl bg-surface-container-low p-3">

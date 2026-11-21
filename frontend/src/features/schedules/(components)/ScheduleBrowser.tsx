@@ -112,8 +112,8 @@ function ScheduleRow({ schedule, isAuthenticated }: { schedule: IScheduleResourc
         </div>
       </div>
 
-      {/* Fare */}
-      <FareBadge fare={a.fare} serviceClass={a.bus_service_class} className="hidden md:inline-flex" />
+      {/* Fare (paid-ride companies only) */}
+      {a.payments_enabled && <FareBadge fare={a.fare} serviceClass={a.bus_service_class} />}
 
       {/* Seats */}
       <SeatsIndicator available={a.available_seats} capacity={a.bus_capacity} />

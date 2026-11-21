@@ -52,6 +52,12 @@ module V1
       schedule.bus&.service_class
     end
 
+    # Whether a booking on this schedule is paid (the bus's company's city has payments on). The
+    # frontend shows fare UI only when true, so companies without paid rides see no change.
+    attribute :payments_enabled do |schedule|
+      schedule.city&.payments_enabled || false
+    end
+
     attribute :fare do |schedule, params|
       quote, = quote_for(schedule, params)
       quote && {

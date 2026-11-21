@@ -20,6 +20,8 @@ interface IScheduleAttributes {
   company_name?: string;
   company_uid?: string;
   booked_by_current_user?: boolean;
+  /** True when booking this schedule is paid; fare UI is shown only then. */
+  payments_enabled: boolean;
   fare: IScheduleFare | null;
   fare_unavailable_reason: TFareUnavailableReason | null;
   bus_service_class?: "non_ac" | "ac" | null;
