@@ -20,6 +20,9 @@ Rails.application.routes.draw do
       resources :users, constraints: { format: :json }
       resources :schedules, constraints: { format: :json }
       resources :reservations, only: %i[index show create destroy], constraints: { format: :json }
+
+      # Payment gateway webhooks (signature-checked, no JWT)
+      post '/webhooks/hyperswitch', to: 'webhooks#hyperswitch'
     end
   end
 end
