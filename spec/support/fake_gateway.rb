@@ -1,15 +1,17 @@
 # frozen_string_literal: true
 
 # In-memory stand-in for Payments::Hyperswitch. Records every call in #calls and returns
-# Payments::Result values like the real gateway. Set fail_create / fail_cancel / fail_refund to
-# make that call return a failed result.
+# Payments::Result values like the real gateway. Set fail_create / fail_fetch / fail_cancel /
+# fail_refund to make that call return a failed result; payment_status and refund_status set the
+# status fetch_payment and fetch_refund report.
 class FakeGateway
   attr_reader :calls
-  attr_accessor :fail_create, :fail_cancel, :fail_refund, :refund_status
+  attr_accessor :fail_create, :fail_fetch, :fail_cancel, :fail_refund, :payment_status, :refund_status
 
   def initialize
     @calls = Hash.new { |hash, key| hash[key] = [] }
     @sequence = 0
+    @payment_status = 'requires_payment_method'
     @refund_status = 'pending'
   end
 
@@ -23,7 +25,9 @@ class FakeGateway
 
   def fetch_payment(id, sync: false)
     calls[:fetch_payment] << { id: id, sync: sync }
-    success(id: id, status: 'requires_payment_method', connector: nil, error: nil)
+    return failure('gateway unreachable') if fail_fetch
+
+    success(id: id, status: payment_status, connector: nil, error: nil)
   end
 
   def cancel_payment(id)

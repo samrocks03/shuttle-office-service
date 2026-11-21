@@ -36,4 +36,10 @@ namespace :payments do
     written = env_file.merge!(result[:env].merge('HYPERSWITCH_URL' => base_url))
     puts "Wrote #{written.join(', ')} to .env"
   end
+
+  desc 'Start the refund status sync (RefundSyncJob reschedules itself every 10 minutes). Run once per environment.'
+  task start_refund_sync: :environment do
+    RefundSyncJob.perform_later
+    puts 'Queued RefundSyncJob'
+  end
 end
