@@ -1,0 +1,11 @@
+{
+  "payment_id": "pay_8Hq2Zk0vLxT3mNcWbR4e",
+  "merchant_id": "merchant_shuttle",
+  "status": "cancelled",
+  "amount": 3500,
+  "currency": "INR",
+  "cancellation_reason": "reservation_expired",
+  "connector": null,
+  "error_code": null,
+  "error_message": null
+}

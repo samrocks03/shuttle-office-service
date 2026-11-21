@@ -1,0 +1,7 @@
+{
+  "error": {
+    "type": "invalid_request",
+    "message": "Missing required param: amount",
+    "code": "IR_04"
+  }
+}

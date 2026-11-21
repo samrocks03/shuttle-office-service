@@ -1,0 +1,11 @@
+{
+  "refund_id": "ref_5Tn7Ym2pQsV8wXzA1bC3",
+  "payment_id": "pay_8Hq2Zk0vLxT3mNcWbR4e",
+  "amount": 3500,
+  "currency": "INR",
+  "reason": "Reservation cancelled by rider",
+  "status": "succeeded",
+  "metadata": null,
+  "error_message": null,
+  "created_at": "2026-11-21T10:15:00.000Z"
+}
