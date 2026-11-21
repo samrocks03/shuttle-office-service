@@ -3,21 +3,23 @@
 module Reservations
   # The single place a reservation changes status, so the webhook, the payment sync and the expiry
   # job cannot disagree. Returns true when the move was made, false for any move not in ALLOWED
-  # (including a move to the current state), in which case nothing is changed.
+  # (including a move to the current state), in which case nothing is changed. With from:, the move
+  # is also refused unless the locked, reloaded status equals from (the caller's view is not stale).
   class Transition
     ALLOWED = {
       'pending_payment' => %w[confirmed expired cancelled],
       'confirmed' => %w[cancelled]
     }.freeze
 
-    def self.call(reservation, to:, reason:)
-      new(reservation, to: to, reason: reason).call
+    def self.call(reservation, to:, reason:, from: nil)
+      new(reservation, to: to, reason: reason, from: from).call
     end
 
-    def initialize(reservation, to:, reason:)
+    def initialize(reservation, to:, reason:, from: nil)
       @reservation = reservation
       @to = to.to_s
       @reason = reason
+      @expected_from = from&.to_s
     end
 
     def call
@@ -39,6 +41,8 @@ module Reservations
 
     def allowed?
       @from = @reservation.status
+      return false if @expected_from && @expected_from != @from
+
       ALLOWED.fetch(@from, []).include?(@to)
     end
 

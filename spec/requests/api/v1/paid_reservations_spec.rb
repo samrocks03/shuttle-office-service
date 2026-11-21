@@ -237,6 +237,42 @@ RSpec.describe 'Api::V1::Reservations (paid)', type: :request do
       end
     end
 
+    context 'when a payment confirms the hold while the cancel is in flight' do
+      let!(:reservation) { hold!(status: 'pending_payment', payment_status: 'requires_payment_method') }
+
+      # The cancel loads the reservation as pending_payment; the webhook confirms the row before
+      # the cancel's Transition takes the lock.
+      before do
+        stale = Reservation.find(reservation.id)
+        relation = instance_double(ActiveRecord::Relation, find_by: stale)
+        allow(ReservationRepository).to receive(:scope_for).and_return(relation)
+        reservation.update_columns(status: 'confirmed')
+        reservation.payments.sole.update_columns(status: 'succeeded')
+      end
+
+      it 'cancels and refunds the full amount before departure' do
+        cancel(reservation)
+
+        expect(response).to have_http_status(:ok)
+        expect(reservation.reload).to be_cancelled
+        expect(Refund.sole).to have_attributes(amount_minor: 3500, status: 'pending')
+        expect(gateway.calls[:create_refund].size).to eq(1)
+        expect(gateway.calls[:cancel_payment]).to be_empty
+        expect(schedule.reload.available_seats).to eq(40)
+      end
+
+      it 'refuses after departure and stays confirmed' do
+        schedule.update_columns(date: Date.yesterday)
+
+        cancel(reservation)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(json_response['error_key']).to eq('reservation.cancel_too_late')
+        expect(reservation.reload).to be_confirmed
+        expect(Refund.count).to eq(0)
+      end
+    end
+
     it 'refuses an expired hold' do
       reservation = hold!(status: 'pending_payment', payment_status: 'requires_payment_method')
       Reservations::Transition.call(reservation, to: :expired, reason: 'test')

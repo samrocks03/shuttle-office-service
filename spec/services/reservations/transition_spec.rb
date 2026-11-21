@@ -48,6 +48,22 @@ RSpec.describe Reservations::Transition do
     end
   end
 
+  describe 'from:' do
+    it 'moves when the locked status equals from' do
+      expect(described_class.call(reservation, to: :cancelled, from: :pending_payment, reason: 'spec')).to be true
+      expect(reservation.reload.status).to eq('cancelled')
+    end
+
+    it 'refuses and changes nothing when the row moved on since it was loaded' do
+      Reservation.where(id: reservation.id).update_all(status: 'confirmed')
+      seats = schedule.reload.available_seats
+
+      expect(described_class.call(reservation, to: :cancelled, from: :pending_payment, reason: 'spec')).to be false
+      expect(reservation.reload.status).to eq('confirmed')
+      expect(schedule.reload.available_seats).to eq(seats)
+    end
+  end
+
   describe 'disallowed moves' do
     [
       %w[confirmed expired],

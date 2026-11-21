@@ -78,27 +78,30 @@ module ReservationService
     end
 
     # The reservation is cancelled first, so a payment that succeeds while we talk to the gateway
-    # meets a cancelled reservation and is refunded (the late-payment rule).
+    # meets a cancelled reservation and is refunded (the late-payment rule). The move only happens
+    # if the row is still pending under the lock; if a payment confirmed it meanwhile, the
+    # confirmed path runs instead (departure check and refund).
     def cancel_pending
-      return false unless transition_to_cancelled
+      if transition_to_cancelled(from: :pending_payment)
+        reservation.open_payments.each { |payment| cancel_payment(payment) }
+        return true
+      end
+      return cancel_confirmed if reservation.reload.confirmed?
 
-      reservation.open_payments.each { |payment| cancel_payment(payment) }
-      true
+      add_error('reservation.not_cancellable')
     end
 
     def cancel_confirmed
       return add_error('reservation.cancel_too_late') if reservation.schedule.departs_at <= Time.current
-      return false unless transition_to_cancelled
+      return add_error('reservation.not_cancellable') unless transition_to_cancelled(from: :confirmed)
 
       payment = reservation.succeeded_payment
       refund(payment) if payment
       true
     end
 
-    def transition_to_cancelled
-      return true if Reservations::Transition.call(reservation, to: :cancelled, reason: 'cancelled_by_rider')
-
-      add_error('reservation.not_cancellable')
+    def transition_to_cancelled(from:)
+      Reservations::Transition.call(reservation, to: :cancelled, from: from, reason: 'cancelled_by_rider')
     end
 
     # A refused cancel does not stop the cancellation; the error is kept on the payment.
