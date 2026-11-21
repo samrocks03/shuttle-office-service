@@ -120,12 +120,14 @@ RSpec.describe 'Api::V1::Schedules', type: :request do
         'amount_minor' => 3500, 'currency' => 'INR', 'distance_km' => 18.4, 'slab_label' => 'up to 20 km'
       )
       expect(listed(priced)['fare_unavailable_reason']).to be_nil
+      expect(listed(priced)['bus_service_class']).to eq('ac')
     end
 
     it 'includes the fare when showing one schedule' do
       get "/api/v1/schedules/#{priced.uid}.json", headers: headers
 
       expect(json_response['data']['attributes']['fare']['amount_minor']).to eq(3500)
+      expect(json_response['data']['attributes']['bus_service_class']).to eq('ac')
     end
 
     it 'lists a schedule without stops with a null fare and a reason' do

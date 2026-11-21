@@ -48,6 +48,10 @@ module V1
       schedule.bus&.capacity
     end
 
+    attribute :bus_service_class do |schedule|
+      schedule.bus&.service_class
+    end
+
     attribute :fare do |schedule, params|
       quote, = quote_for(schedule, params)
       quote && {

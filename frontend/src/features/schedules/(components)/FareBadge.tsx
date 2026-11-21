@@ -5,7 +5,7 @@ const SERVICE_CLASS_LABELS = { ac: "AC", non_ac: "Non-AC" } as const;
 
 interface FareBadgeProps {
   fare: IScheduleFare | null;
-  serviceClass?: "non_ac" | "ac";
+  serviceClass?: "non_ac" | "ac" | null;
   className?: string;
 }
 

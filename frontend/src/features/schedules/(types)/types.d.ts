@@ -22,8 +22,7 @@ interface IScheduleAttributes {
   booked_by_current_user?: boolean;
   fare: IScheduleFare | null;
   fare_unavailable_reason: TFareUnavailableReason | null;
-  /** Not yet serialized by the API; the fare badge shows the AC part only when this is present. */
-  bus_service_class?: "non_ac" | "ac";
+  bus_service_class?: "non_ac" | "ac" | null;
 }
 
 interface IScheduleResource {
