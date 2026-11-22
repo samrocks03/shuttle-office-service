@@ -2,7 +2,7 @@
 
 class ScheduleRepository
   def self.index(search: nil, sort_by: 'date', sort_order: 'desc', bus_id: nil, start_point: nil, date: nil)
-    scope = Schedule.includes(bus: :company)
+    scope = Schedule.includes(:from_stop, :to_stop, bus: { company: :city })
 
     scope = scope.where(bus_id: bus_id) if bus_id.present?
     scope = scope.where('schedules.start_point ILIKE ?', "%#{start_point}%") if start_point.present?

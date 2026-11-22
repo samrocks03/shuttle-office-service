@@ -19,6 +19,7 @@ module ReservationService
 
     def fetch_reservations
       scope = ReservationRepository.index(
+        scope: ReservationRepository.scope_for(@current_user),
         search: @params[:search],
         sort_by: @params[:sort_by],
         sort_order: @params[:sort_order]

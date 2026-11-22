@@ -19,6 +19,7 @@ class Ability
 
       can :read, Company
       can :read, Schedule # user can read schedule
+      can :read, [City, Stop] # stops pickers; distances and fare tables stay admin-only
       can %i[create read], Reservation, user_id: user.id # can view only his reservation
       cannot %i[update delete], Reservation # User cannot update or delete reservations
 

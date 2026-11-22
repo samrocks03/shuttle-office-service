@@ -120,6 +120,67 @@ en:
     not_found:
       detail: "User not found"
 
+  city:
+    index:
+      success:
+        message: "Cities fetched successfully"
+    show:
+      success:
+        message: "City fetched successfully"
+    not_found:
+      detail: "City not found"
+
+  stop:
+    index:
+      success:
+        message: "Stops fetched successfully"
+    show:
+      success:
+        message: "Stop fetched successfully"
+    create:
+      success:
+        message: "Stop created successfully"
+      failure:
+        detail: "Failed to create stop: %{message}"
+    update:
+      success:
+        message: "Stop updated successfully"
+      failure:
+        detail: "Failed to update stop: %{message}"
+    destroy:
+      success:
+        message: "Stop deleted successfully"
+      failure:
+        detail: "This stop is used by a schedule, so it cannot be deleted"
+    not_found:
+      detail: "Stop not found"
+
+  stop_distance:
+    index:
+      success:
+        message: "Distances fetched successfully"
+    update:
+      success:
+        message: "Distance updated successfully"
+      failure:
+        detail: "Failed to update distance: %{message}"
+    not_found:
+      detail: "Distance not found"
+    override_km_required:
+      detail: "override_km is required; send null to clear the override"
+    override_km_invalid:
+      detail: "override_km must be a number of kilometres"
+
+  fare_table:
+    index:
+      success:
+        message: "Fare tables fetched successfully"
+    show:
+      success:
+        message: "Fare table fetched successfully"
+    not_found:
+      detail: "Fare table not found"
+
   schedule:
     index:
       success:
@@ -146,6 +207,8 @@ en:
       detail: "Schedule not found"
     date_in_past:
       detail: "Cannot accept date before today"
+    stop_not_found:
+      detail: "Stop not found: %{uid}"
 
   reservation:
     index:
@@ -171,5 +234,31 @@ en:
         detail: "Failed to delete reservation"
     not_found:
       detail: "Reservation not found"
+    guest_forbidden:
+      detail: "Guests cannot book rides. Please sign in as an employee."
     no_seats:
       detail: "Cannot make reservation, no seats available"
+    not_priced:
+      detail: "This ride cannot be booked yet because its fare is not set: %{reason}."
+      reasons:
+        no_city: "the bus company has no city"
+        no_stops: "the ride has no pickup or drop stop"
+        no_distance: "the distance between its stops is not known"
+        no_fare_table: "there is no fare table for this bus type on this date"
+    payment_start_failed:
+      detail: "We could not start the payment, so your seat was not held. Please try again."
+    payment_status:
+      success:
+        message: "Payment status fetched successfully"
+    retry_payment:
+      success:
+        message: "Payment restarted"
+    retry_not_allowed:
+      detail: "This payment cannot be retried. Please check its status, or book again if the hold has ended."
+    cancel:
+      success:
+        message: "Reservation cancelled"
+    cancel_too_late:
+      detail: "This ride has already departed, so it can no longer be cancelled."
+    not_cancellable:
+      detail: "This reservation is already cancelled or expired."

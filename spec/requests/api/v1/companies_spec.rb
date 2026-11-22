@@ -74,6 +74,16 @@ RSpec.describe 'Api::V1::Companies', type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it 'fails cleanly and keeps a company that owns an office stop' do
+      create(:stop, :office, company: company)
+
+      delete "/api/v1/companies/#{company.uid}.json", headers: headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response['success']).to be false
+      expect(Company.exists?(company.id)).to be true
+    end
+
     it 'returns error for nonexistent' do
       delete '/api/v1/companies/bad.json', headers: headers
       expect(response).to have_http_status(:unprocessable_entity)

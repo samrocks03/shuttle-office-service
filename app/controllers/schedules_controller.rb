@@ -88,7 +88,7 @@ class SchedulesController < ApplicationController
   def schedule_json(schedule)
     return {} unless schedule.present?
 
-    available_seats = schedule.bus.capacity - schedule.reservations.count
+    available_seats = schedule.bus.capacity - schedule.reservations.active.count
     {
       id: schedule.id,
       start_point: schedule.start_point,

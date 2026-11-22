@@ -1,0 +1,58 @@
+# Pune stops. Coordinates and osm_ref come from OpenStreetMap Nominatim (see query notes in the task report).
+city: { name: Pune, country_code: IN, currency: INR, time_zone: Asia/Kolkata, distance_provider: osrm, payments_enabled: false }
+stops:
+  - { name: Wakad, kind: pickup, latitude: 18.602249, longitude: 73.764445, osm_ref: "node/1229121214" }
+  - { name: Baner, kind: pickup, latitude: 18.558994, longitude: 73.784523, osm_ref: "node/6616602606" }
+  - { name: Aundh, kind: pickup, latitude: 18.561883, longitude: 73.810196, osm_ref: "node/245648364" }
+  - { name: Kothrud, kind: pickup, latitude: 18.507262, longitude: 73.805668, osm_ref: "way/1428534377" }
+  - { name: Hadapsar, kind: pickup, latitude: 18.526967, longitude: 73.927825, osm_ref: "node/2539975310" }
+  - { name: Viman Nagar, kind: pickup, latitude: 18.570388, longitude: 73.913334, osm_ref: "node/12866376980" }
+  - { name: Pimple Saudagar, kind: pickup, latitude: 18.598155, longitude: 73.797766, osm_ref: "node/4714951302" }
+  - { name: Shivaji Nagar, kind: pickup, latitude: 18.532172, longitude: 73.84966, osm_ref: "node/11097510271" }
+  - { name: Kharadi, kind: pickup, latitude: 18.551276, longitude: 73.941658, osm_ref: "node/1796628053" }
+  - { name: Magarpatta Gate, kind: pickup, latitude: 18.515088, longitude: 73.92324, osm_ref: "way/160385572" }
+  - { name: Swargate, kind: pickup, latitude: 18.500495, longitude: 73.852904, osm_ref: "way/53272975" }
+  - { name: Pune Railway Station, kind: pickup, latitude: 18.529759, longitude: 73.872409, osm_ref: "way/1494691943" }
+  - { name: Hinjewadi Phase 1, kind: office, latitude: 18.591033, longitude: 73.735297, osm_ref: "node/673316094" }
+  - { name: Hinjewadi Phase 2, kind: office, latitude: 18.593828, longitude: 73.707911, osm_ref: "node/13611182118" }
+  - { name: Hinjewadi Phase 3, kind: office, latitude: 18.586088, longitude: 73.687338, osm_ref: "node/9497561239" }
+  - { name: EON IT Park Kharadi, kind: office, latitude: 18.551815, longitude: 73.951153, osm_ref: "way/206530452" }
+  - { name: Magarpatta City, kind: office, latitude: 18.520649, longitude: 73.927844, osm_ref: "way/466980645" }
+  - { name: Commerzone Yerawada, kind: office, latitude: 18.562325, longitude: 73.884078, osm_ref: "way/257626683" }
+# Fares: BEST (Mumbai) slabs for Pune, in paise. Prices change by adding a table with a later
+# effective_from, never by editing a table that already has slabs.
+fares:
+  - service_class: non_ac
+    effective_from: '2026-12-01'
+    currency: INR
+    policy: slab
+    step_km: 5
+    step_amount_minor: 500
+    slabs:
+      - { up_to_km: 5, amount_minor: 1000 }
+      - { up_to_km: 10, amount_minor: 1500 }
+      - { up_to_km: 15, amount_minor: 2000 }
+      - { up_to_km: 20, amount_minor: 3000 }
+      - { up_to_km: 25, amount_minor: 3500 }
+      - { up_to_km: 30, amount_minor: 4000 }
+      - { up_to_km: 35, amount_minor: 4500 }
+      - { up_to_km: 40, amount_minor: 5000 }
+      - { up_to_km: 45, amount_minor: 5500 }
+      - { up_to_km: 50, amount_minor: 6000 }
+  - service_class: ac
+    effective_from: '2026-12-01'
+    currency: INR
+    policy: slab
+    step_km: 5
+    step_amount_minor: 500
+    slabs:
+      - { up_to_km: 5, amount_minor: 1200 }
+      - { up_to_km: 10, amount_minor: 2000 }
+      - { up_to_km: 15, amount_minor: 3000 }
+      - { up_to_km: 20, amount_minor: 3500 }
+      - { up_to_km: 25, amount_minor: 4000 }
+      - { up_to_km: 30, amount_minor: 4500 }
+      - { up_to_km: 35, amount_minor: 5000 }
+      - { up_to_km: 40, amount_minor: 5500 }
+      - { up_to_km: 45, amount_minor: 6000 }
+      - { up_to_km: 50, amount_minor: 6500 }

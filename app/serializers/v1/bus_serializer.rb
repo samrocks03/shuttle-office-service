@@ -4,7 +4,7 @@ module V1
   class BusSerializer
     include JSONAPI::Serializer
 
-    attributes :uid, :number, :capacity, :model, :created_at, :updated_at
+    attributes :uid, :number, :capacity, :model, :service_class, :created_at, :updated_at
 
     attribute :company_name do |bus|
       bus.company&.name

@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSchedules } from "../(queries)/queries";
-import { useCreateReservation } from "@/features/reservations/(queries)/queries";
+import { bffErrorMessage, useBookRide } from "@/features/reservations/(queries)/queries";
+import { FareBadge } from "./FareBadge";
 
 const PER_PAGE = 8;
 
@@ -52,9 +53,9 @@ function Seatsbadge({ available, capacity }: { available: number; capacity?: num
   );
 }
 
-function ReserveButton({ scheduleId }: { scheduleId: number }) {
-  const create = useCreateReservation();
-  const [confirmed, setConfirmed] = useState(false);
+function ReserveButton({ scheduleId, alreadyBooked }: { scheduleId: number; alreadyBooked?: boolean }) {
+  const { book, create } = useBookRide();
+  const [confirmed, setConfirmed] = useState(alreadyBooked ?? false);
 
   if (confirmed) {
     return (
@@ -66,17 +67,18 @@ function ReserveButton({ scheduleId }: { scheduleId: number }) {
   }
 
   return (
-    <button
-      onClick={() =>
-        create.mutate(scheduleId, {
-          onSuccess: () => setConfirmed(true),
-        })
-      }
-      disabled={create.isPending}
-      className="rounded-lg bg-brand-600 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-white transition-all hover:bg-brand-700 active:translate-y-px disabled:opacity-50"
-    >
-      {create.isPending ? "Booking..." : "Reserve"}
-    </button>
+    <div className="flex flex-col items-end gap-1">
+      <button
+        onClick={() => book(scheduleId, () => setConfirmed(true))}
+        disabled={create.isPending}
+        className="rounded-lg bg-brand-600 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-white transition-all hover:bg-brand-700 active:translate-y-px disabled:opacity-50"
+      >
+        {create.isPending ? "Booking..." : "Reserve"}
+      </button>
+      {create.isError && (
+        <p className="max-w-56 text-right text-xs text-red-600">{bffErrorMessage(create.error)}</p>
+      )}
+    </div>
   );
 }
 
@@ -122,11 +124,12 @@ function ScheduleRow({ schedule }: { schedule: IScheduleResource }) {
         </div>
       </div>
 
-      {/* Right: seats + action */}
-      <div className="flex items-center justify-between gap-4 sm:justify-end">
+      {/* Right: fare + seats + action */}
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
+        {a.payments_enabled && <FareBadge fare={a.fare} serviceClass={a.bus_service_class} />}
         <Seatsbadge available={a.available_seats} capacity={a.bus_capacity} />
         {a.available_seats > 0 ? (
-          <ReserveButton scheduleId={Number(schedule.id)} />
+          <ReserveButton scheduleId={Number(schedule.id)} alreadyBooked={a.booked_by_current_user} />
         ) : (
           <button
             disabled
@@ -235,6 +238,14 @@ function RouteTimeline({ schedule }: { schedule: IScheduleResource | undefined }
           <div className="font-mono text-xs tabular-nums text-on-surface-variant">{formatTime(a.arrival_time)}</div>
         </div>
       </div>
+
+      {/* Fare (paid-ride companies only) */}
+      {a.payments_enabled && (
+        <div className="flex items-center justify-between rounded-xl bg-surface-container-low p-3">
+          <span className="font-mono text-[10px] font-bold uppercase text-on-surface-variant">Fare</span>
+          <FareBadge fare={a.fare} serviceClass={a.bus_service_class} />
+        </div>
+      )}
 
       {/* Seats remaining */}
       <div className="flex items-center justify-between rounded-xl bg-surface-container-low p-3">

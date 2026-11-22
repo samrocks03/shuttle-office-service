@@ -31,7 +31,7 @@ module Api
       private
 
       def bus_params
-        params.require(:bus).permit(:number, :capacity, :model, :company_id)
+        params.require(:bus).permit(:number, :capacity, :model, :company_id, :service_class)
       end
     end
   end

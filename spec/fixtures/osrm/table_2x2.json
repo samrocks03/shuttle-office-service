@@ -1,0 +1,19 @@
+{
+  "code": "Ok",
+  "distances": [
+    [12345.0, 8000.4],
+    [5000.0, 20500.9]
+  ],
+  "durations": [
+    [1200.5, 900.0],
+    [300.0, 1800.1]
+  ],
+  "sources": [
+    { "hint": "a", "distance": 4.2, "name": "Source A", "location": [73.8743, 18.5286] },
+    { "hint": "b", "distance": 3.1, "name": "Source B", "location": [73.8567, 18.5204] }
+  ],
+  "destinations": [
+    { "hint": "c", "distance": 2.0, "name": "Dest C", "location": [73.7389, 18.5913] },
+    { "hint": "d", "distance": 5.5, "name": "Dest D", "location": [73.8000, 18.5600] }
+  ]
+}

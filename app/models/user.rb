@@ -8,6 +8,8 @@ class User < ApplicationRecord
   belongs_to :role, inverse_of: :users
   belongs_to :company, inverse_of: :users
   has_many :reservations, dependent: :destroy, inverse_of: :user
+  has_many :overridden_stop_distances, class_name: 'StopDistance', foreign_key: :overridden_by_id,
+                                       dependent: :nullify, inverse_of: :overridden_by
 
   validates :first_name, :last_name, :phone_number, presence: true
   validates :phone_number, numericality: true, format: { with: /\A\d{10}\z/, message: 'must be 10 digits' }

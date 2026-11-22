@@ -4,6 +4,8 @@ class Schedule < ApplicationRecord
   include UidGenerator
 
   belongs_to :bus, inverse_of: :schedules
+  belongs_to :from_stop, class_name: 'Stop', optional: true
+  belongs_to :to_stop, class_name: 'Stop', optional: true
   has_many :reservations, dependent: :destroy, inverse_of: :schedule
 
   validates :start_point, :arrival_time, :departure_time, presence: true
@@ -28,6 +30,22 @@ class Schedule < ApplicationRecord
     rows.positive?
   end
 
+  def city
+    bus&.company&.city
+  end
+
+  def stop_distance
+    return unless from_stop_id && to_stop_id
+
+    StopDistance.between(from_stop, to_stop)
+  end
+
+  # Date and departure time as a moment in the city's time zone (the app zone when there is no city).
+  def departs_at
+    zone = ActiveSupport::TimeZone[city&.time_zone.to_s] || Time.zone
+    zone.local(date.year, date.month, date.day, departure_time.hour, departure_time.min, departure_time.sec)
+  end
+
   private
 
   def arr_dept_validation
@@ -37,7 +55,9 @@ class Schedule < ApplicationRecord
   end
 
   def set_default_available_seats
-    self.available_seats ||= bus.capacity if bus
+    return unless available_seats.nil? && bus
+
+    self.available_seats = bus.capacity
   end
 
   def unique_schedule_within_duration

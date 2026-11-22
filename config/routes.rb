@@ -20,6 +20,18 @@ Rails.application.routes.draw do
       resources :users, constraints: { format: :json }
       resources :schedules, constraints: { format: :json }
       resources :reservations, only: %i[index show create destroy], constraints: { format: :json }
+      get '/reservations/:id/payment', to: 'reservations#payment_status', constraints: { format: :json }
+      post '/reservations/:id/payment', to: 'reservations#retry_payment', constraints: { format: :json }
+
+      # Routing admin: cities and stops (employees read, admins write), distances and fares (admins)
+      resources :cities, only: %i[index show], constraints: { format: :json } do
+        resources :stops, constraints: { format: :json }
+      end
+      resources :stop_distances, only: %i[index update], constraints: { format: :json }
+      resources :fare_tables, only: %i[index show], constraints: { format: :json }
+
+      # Payment gateway webhooks (signature-checked, no JWT)
+      post '/webhooks/hyperswitch', to: 'webhooks#hyperswitch'
     end
   end
 end

@@ -2,6 +2,8 @@
 
 module ScheduleService
   class Update < Base
+    include StopUids
+
     attr_reader :params, :current_user, :schedule
     SUCCESS_KEY = 'schedule.update.success.message'
 
@@ -13,7 +15,7 @@ module ScheduleService
 
     def call
       result = ActiveRecord::Base.transaction do
-        find_schedule && update_schedule && set_data && set_response
+        find_schedule && assign_stops && update_schedule && set_data && set_response
       end
       result || set_response
     end
@@ -28,8 +30,14 @@ module ScheduleService
       false
     end
 
+    def assign_stops
+      @stop_ids = resolve_stop_ids
+      @stop_ids != false
+    end
+
     def update_schedule
-      return true if schedule.update(params.slice(:start_point, :arrival_time, :departure_time, :date, :bus_id))
+      attributes = params.slice(:start_point, :arrival_time, :departure_time, :date, :bus_id).merge(@stop_ids)
+      return true if schedule.update(attributes)
 
       add_error('schedule.update.failure', message: schedule.errors.full_messages.join(', '))
       false
